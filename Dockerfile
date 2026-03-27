@@ -19,7 +19,7 @@ COPY app/ ./app/
 
 # Create non-root user for security
 RUN addgroup --system --gid 1001 botgroup \
-    && adduser --system --uid 1001 --gid 1001 --ingroup botgroup botuser
+    && adduser --system --uid 1001 --ingroup botgroup botuser
 
 # Create data directories (overridden by Railway volumes in production)
 RUN mkdir -p /data/db /data/images \
