@@ -1,8 +1,11 @@
+import os
+from pathlib import Path
+
 from aiogram import Bot, F, Router
 from aiogram.enums import ChatAction
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
 from app.bot.keyboards import main_menu_keyboard
 from app.db.database import approve_user, get_all_users_summary, get_user_body_params, get_user_language
@@ -77,6 +80,57 @@ async def on_admin_deny(callback: CallbackQuery, bot: Bot) -> None:
         await bot.send_message(target_user_id, t("denied_notification", lang))
     except Exception as e:
         logger.warning("Could not notify denied user %s: %s", target_user_id, e)
+
+
+# ── Admin: /photos command ────────────────────────────────────────────────────
+
+@router.message(Command("photos"))
+async def cmd_photos(message: Message, bot: Bot) -> None:
+    """Usage: /photos <user_id>  — sends all stored photos for a user."""
+    if not message.from_user or message.from_user.id != settings.admin_telegram_id:
+        return
+    parts = message.text.split() if message.text else []
+    if len(parts) < 2:
+        # List all users who have photos
+        images_dir = settings.images_dir
+        if not images_dir.exists():
+            await message.answer("📂 No images directory found.")
+            return
+        user_dirs = [d for d in images_dir.iterdir() if d.is_dir()]
+        if not user_dirs:
+            await message.answer("📂 No photos stored yet.")
+            return
+        lines = ["📂 Users with photos:\n"]
+        for d in sorted(user_dirs):
+            count = len(list(d.glob("*.jpg")))
+            lines.append(f"• ID: {d.name} — {count} photo(s)  →  /photos {d.name}")
+        await message.answer("\n".join(lines))
+        return
+
+    target_id = parts[1]
+    user_dir = settings.images_dir / target_id
+    if not user_dir.exists():
+        await message.answer(f"📂 No photos found for user {target_id}.")
+        return
+
+    photos = sorted(user_dir.glob("*.jpg"), key=lambda p: p.stat().st_mtime, reverse=True)
+    if not photos:
+        await message.answer(f"📂 No photos found for user {target_id}.")
+        return
+
+    await message.answer(f"📸 Sending {len(photos)} photo(s) for user {target_id}...")
+    for photo_path in photos[:10]:  # cap at 10 to avoid spam
+        try:
+            with open(photo_path, "rb") as f:
+                photo_bytes = f.read()
+            await bot.send_photo(
+                message.chat.id,
+                BufferedInputFile(photo_bytes, filename=photo_path.name),
+                caption=f"🗂 {photo_path.name}",
+            )
+        except Exception as e:
+            logger.error("Failed to send photo %s: %s", photo_path, e)
+            await message.answer(f"⚠️ Could not send {photo_path.name}")
 
 
 # ── Admin: /resetuser command ─────────────────────────────────────────────────
