@@ -17,15 +17,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy source code
 COPY app/ ./app/
 
-# Create non-root user for security
-RUN addgroup --system --gid 1001 botgroup \
-    && adduser --system --uid 1001 --ingroup botgroup botuser
-
 # Create data directories (overridden by Railway volumes in production)
-RUN mkdir -p /data/db /data/images \
-    && chown -R botuser:botgroup /data /app
-
-USER botuser
+RUN mkdir -p /data/db /data/images
 
 # Default env var overrides pointing to the volume mount paths
 ENV DB_PATH=/data/db/stylecheck.db
