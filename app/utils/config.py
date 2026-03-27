@@ -1,5 +1,5 @@
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -39,6 +39,10 @@ class Settings:
 
     # Gemini
     gemini_model: str = "gemini-2.0-flash-lite"
+
+    # Admin — Telegram user ID of the bot administrator
+    # Set ADMIN_TELEGRAM_ID in your .env file or Railway environment variables
+    admin_telegram_id: int = int(os.getenv("ADMIN_TELEGRAM_ID", "0"))
 
 
 settings = Settings(

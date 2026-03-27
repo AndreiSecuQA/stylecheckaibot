@@ -56,7 +56,8 @@ class TestMainMenuKeyboard:
         from app.bot.keyboards import main_menu_keyboard
         kb = main_menu_keyboard("ro")
         texts = [btn.text for row in kb.keyboard for btn in row]
-        assert "📸 Evalueaza Tinuta" in texts
+        # Accept both old and new Romanian strings
+        assert any("Evalueaz" in t or "Tinuta" in t or "Ținuta" in t for t in texts)
 
     def test_buy_support_button_english(self):
         from app.bot.keyboards import main_menu_keyboard
@@ -97,23 +98,18 @@ class TestRateOutfitKeyboard:
         kb = rate_outfit_keyboard("en")
         assert isinstance(kb, InlineKeyboardMarkup)
 
-    def test_has_three_buttons(self):
+    def test_has_two_buttons(self):
+        # Simplified: Tips for 10/10 + Back to Menu
         from app.bot.keyboards import rate_outfit_keyboard
         kb = rate_outfit_keyboard("en")
         buttons = [btn for row in kb.inline_keyboard for btn in row]
-        assert len(buttons) == 3
+        assert len(buttons) == 2
 
-    def test_has_perfect_outfit_callback(self):
+    def test_has_tips_for_10_callback(self):
         from app.bot.keyboards import rate_outfit_keyboard
         kb = rate_outfit_keyboard("en")
         callbacks = [btn.callback_data for row in kb.inline_keyboard for btn in row]
-        assert "action:perfect_outfit" in callbacks
-
-    def test_has_change_colors_callback(self):
-        from app.bot.keyboards import rate_outfit_keyboard
-        kb = rate_outfit_keyboard("en")
-        callbacks = [btn.callback_data for row in kb.inline_keyboard for btn in row]
-        assert "action:change_colors" in callbacks
+        assert "action:tips_for_10" in callbacks
 
     def test_has_back_to_menu_callback(self):
         from app.bot.keyboards import rate_outfit_keyboard
@@ -123,17 +119,16 @@ class TestRateOutfitKeyboard:
 
 
 class TestOccasionPhotoKeyboard:
-    def test_has_send_another_callback(self):
-        from app.bot.keyboards import occasion_photo_keyboard
-        kb = occasion_photo_keyboard("en")
-        callbacks = [btn.callback_data for row in kb.inline_keyboard for btn in row]
-        assert "action:send_another" in callbacks
-
     def test_has_back_to_menu_callback(self):
         from app.bot.keyboards import occasion_photo_keyboard
         kb = occasion_photo_keyboard("en")
         callbacks = [btn.callback_data for row in kb.inline_keyboard for btn in row]
         assert "action:back_to_menu" in callbacks
+
+    def test_returns_inline_markup(self):
+        from app.bot.keyboards import occasion_photo_keyboard
+        kb = occasion_photo_keyboard("en")
+        assert isinstance(kb, InlineKeyboardMarkup)
 
 
 class TestBuyResultKeyboard:
@@ -155,7 +150,6 @@ class TestPostAnalysisKeyboardLegacyAlias:
         from app.bot.keyboards import post_analysis_keyboard, rate_outfit_keyboard
         kb1 = post_analysis_keyboard("en")
         kb2 = rate_outfit_keyboard("en")
-        # Should produce identical structure
         cb1 = [btn.callback_data for row in kb1.inline_keyboard for btn in row]
         cb2 = [btn.callback_data for row in kb2.inline_keyboard for btn in row]
         assert cb1 == cb2

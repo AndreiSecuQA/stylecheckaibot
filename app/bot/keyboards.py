@@ -19,7 +19,7 @@ def language_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[[
             InlineKeyboardButton(text="🇬🇧 English", callback_data="lang:en"),
-            InlineKeyboardButton(text="🇷🇴 Romana",  callback_data="lang:ro"),
+            InlineKeyboardButton(text="🇷🇴 Română",  callback_data="lang:ro"),
         ]]
     )
 
@@ -33,6 +33,16 @@ def main_menu_keyboard(lang: str = "en") -> ReplyKeyboardMarkup:
         ],
         resize_keyboard=True,
         one_time_keyboard=False,
+    )
+
+
+def access_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
+    """Shown during onboarding — user chooses how to get access."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t("btn_enter_own_key", lang), callback_data="access:own_key")],
+            [InlineKeyboardButton(text=t("btn_request_approval", lang), callback_data="access:request_approval")],
+        ]
     )
 
 
@@ -51,31 +61,65 @@ def occasion_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
 def rate_outfit_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text=t("btn_get_perfect",   lang), callback_data="action:perfect_outfit")],
-            [InlineKeyboardButton(text=t("btn_change_colors", lang), callback_data="action:change_colors")],
-            [InlineKeyboardButton(text=t("btn_back_to_menu",  lang), callback_data="action:back_to_menu")],
+            [InlineKeyboardButton(text=t("btn_tips_for_10", lang), callback_data="action:tips_for_10")],
+            [InlineKeyboardButton(text=t("btn_back_to_menu", lang), callback_data="action:back_to_menu")],
         ]
     )
 
 
-def occasion_photo_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
+def buy_feedback_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
+    """Shown after initial buy photo analysis — optional brand/price step."""
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text=t("btn_send_another",  lang), callback_data="action:send_another")],
-            [InlineKeyboardButton(text=t("btn_back_to_menu",  lang), callback_data="action:back_to_menu")],
+            [InlineKeyboardButton(text=t("btn_add_brand_price", lang), callback_data="buy:add_brand_price")],
+            [InlineKeyboardButton(text=t("btn_analyze_another", lang), callback_data="action:analyze_another")],
+            [InlineKeyboardButton(text=t("btn_back_to_menu", lang), callback_data="action:back_to_menu")],
         ]
     )
 
 
-def buy_result_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
+def buy_rating_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
+    """Shown after star rating — user can add another item."""
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text=t("btn_analyze_another", lang), callback_data="action:analyze_another")],
-            [InlineKeyboardButton(text=t("btn_back_to_menu",    lang), callback_data="action:back_to_menu")],
+            [InlineKeyboardButton(text=t("btn_back_to_menu", lang), callback_data="action:back_to_menu")],
         ]
     )
 
 
-# Legacy alias kept so old imports don't break during transition
+def occasion_back_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t("btn_back_to_menu", lang), callback_data="action:back_to_menu")],
+        ]
+    )
+
+
+def admin_approval_keyboard(user_id: int) -> InlineKeyboardMarkup:
+    """Inline keyboard sent to admin for approve/deny."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅ Approve", callback_data=f"admin:approve:{user_id}"),
+                InlineKeyboardButton(text="❌ Deny",    callback_data=f"admin:deny:{user_id}"),
+            ]
+        ]
+    )
+
+
+# Legacy aliases
+def rate_outfit_keyboard_legacy(lang: str = "en") -> InlineKeyboardMarkup:
+    return rate_outfit_keyboard(lang)
+
+
 def post_analysis_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
     return rate_outfit_keyboard(lang)
+
+
+def buy_result_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
+    return buy_rating_keyboard(lang)
+
+
+def occasion_photo_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
+    return occasion_back_keyboard(lang)

@@ -27,6 +27,12 @@ class User(Base):
     daily_check_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     last_check_date: Mapped[Optional[datetime.date]] = mapped_column(Date, nullable=True)
     last_flow_image_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+
+    # Access control
+    gemini_api_key: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    is_approved: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0", nullable=False)
+    free_uses_remaining: Mapped[int] = mapped_column(Integer, default=5, server_default="5", nullable=False)
+
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

@@ -1,6 +1,6 @@
 import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from sqlalchemy import delete, select, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -29,6 +29,9 @@ async def init_db() -> None:
             "ALTER TABLE users ADD COLUMN weight_kg INTEGER DEFAULT NULL",
             "ALTER TABLE users ADD COLUMN onboarding_complete BOOLEAN DEFAULT 0 NOT NULL",
             "ALTER TABLE users ADD COLUMN last_flow_image_path VARCHAR DEFAULT NULL",
+            "ALTER TABLE users ADD COLUMN gemini_api_key VARCHAR DEFAULT NULL",
+            "ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT 0 NOT NULL",
+            "ALTER TABLE users ADD COLUMN free_uses_remaining INTEGER DEFAULT 5 NOT NULL",
         ]
         for sql in migrations:
             try:
@@ -167,8 +170,6 @@ async def save_outfit_check(
             await delete_image(path)
 
 
-# ── New functions ─────────────────────────────────────────────────────────────
-
 async def complete_onboarding(
     telegram_user_id: int, name: str, height_cm: int, weight_kg: int
 ) -> None:
@@ -232,3 +233,93 @@ async def get_last_flow_image(telegram_user_id: int) -> Optional[str]:
         )
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
+
+
+# ── Access control ─────────────────────────────────────────────────────────────
+
+async def get_user_access(telegram_user_id: int) -> Tuple[bool, Optional[str], int]:
+    """
+    Returns (has_access, gemini_api_key_or_None, free_uses_remaining).
+    Logic:
+      - own key  → unlimited access, use their key
+      - approved → unlimited access, use system key (key=None)
+      - free uses remaining > 0 → limited access, use system key
+      - else → no access
+    """
+    async with async_session() as session:
+        stmt = select(User).where(User.telegram_user_id == telegram_user_id)
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+        if user is None:
+            return False, None, 0
+        if user.gemini_api_key:
+            return True, user.gemini_api_key, -1  # -1 = unlimited via own key
+        if user.is_approved:
+            return True, None, -1  # -1 = unlimited via admin approval
+        if user.free_uses_remaining > 0:
+            return True, None, user.free_uses_remaining
+        return False, None, 0
+
+
+async def decrement_free_uses(telegram_user_id: int) -> int:
+    """Decrement free uses counter. Returns remaining count after decrement."""
+    async with async_session() as session:
+        stmt = select(User).where(User.telegram_user_id == telegram_user_id)
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+        if user is None:
+            return 0
+        if user.free_uses_remaining > 0:
+            user.free_uses_remaining = max(0, user.free_uses_remaining - 1)
+            await session.commit()
+            return user.free_uses_remaining
+        return 0
+
+
+async def set_gemini_api_key(telegram_user_id: int, api_key: str) -> None:
+    async with async_session() as session:
+        stmt = select(User).where(User.telegram_user_id == telegram_user_id)
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+        if user is None:
+            user = User(telegram_user_id=telegram_user_id, gemini_api_key=api_key)
+            session.add(user)
+        else:
+            user.gemini_api_key = api_key
+        await session.commit()
+        logger.info("Gemini API key saved for tg_id=%s", telegram_user_id)
+
+
+async def approve_user(telegram_user_id: int) -> bool:
+    """Approve user for unlimited access. Returns True if user was found."""
+    async with async_session() as session:
+        stmt = select(User).where(User.telegram_user_id == telegram_user_id)
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+        if user is None:
+            return False
+        user.is_approved = True
+        await session.commit()
+        logger.info("User tg_id=%s approved by admin", telegram_user_id)
+        return True
+
+
+async def get_all_users_summary() -> List[Dict]:
+    """Return list of users for admin overview."""
+    async with async_session() as session:
+        stmt = select(User).order_by(User.created_at.desc())
+        result = await session.execute(stmt)
+        users = result.scalars().all()
+        return [
+            {
+                "telegram_user_id": u.telegram_user_id,
+                "name": u.name or "—",
+                "language": u.language,
+                "is_approved": u.is_approved,
+                "has_own_key": bool(u.gemini_api_key),
+                "free_uses_remaining": u.free_uses_remaining,
+                "onboarding_complete": u.onboarding_complete,
+                "created_at": u.created_at,
+            }
+            for u in users
+        ]
