@@ -32,6 +32,8 @@ async def init_db() -> None:
             "ALTER TABLE users ADD COLUMN gemini_api_key VARCHAR DEFAULT NULL",
             "ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT 0 NOT NULL",
             "ALTER TABLE users ADD COLUMN free_uses_remaining INTEGER DEFAULT 5 NOT NULL",
+            # Fix: existing users who got free_uses_remaining=0 from old schema get reset to 5
+            "UPDATE users SET free_uses_remaining = 5 WHERE free_uses_remaining = 0 AND gemini_api_key IS NULL AND is_approved = 0",
         ]
         for sql in migrations:
             try:

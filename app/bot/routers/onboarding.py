@@ -1,4 +1,4 @@
-from aiogram import F, Router
+from aiogram import Bot, F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
@@ -187,7 +187,7 @@ async def on_choose_own_key(callback: CallbackQuery, state: FSMContext) -> None:
 
 
 @router.callback_query(Onboarding.waiting_for_access, F.data == "access:request_approval")
-async def on_choose_request_approval(callback: CallbackQuery, state: FSMContext) -> None:
+async def on_choose_request_approval(callback: CallbackQuery, state: FSMContext, bot: Bot) -> None:
     if not callback.from_user or not callback.message:
         return
     user_id = callback.from_user.id
@@ -197,8 +197,7 @@ async def on_choose_request_approval(callback: CallbackQuery, state: FSMContext)
     await callback.answer()
     await state.clear()
     # Notify admin
-    await _notify_admin_approval_request(callback.bot, user_id, name, lang)
-    params = await get_user_body_params(user_id)
+    await _notify_admin_approval_request(bot, user_id, name, lang)
     await callback.message.answer(
         t("approval_requested", lang),
         reply_markup=main_menu_keyboard(lang),

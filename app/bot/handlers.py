@@ -79,6 +79,38 @@ async def on_admin_deny(callback: CallbackQuery, bot: Bot) -> None:
         logger.warning("Could not notify denied user %s: %s", target_user_id, e)
 
 
+# ── Admin: /resetuser command ─────────────────────────────────────────────────
+
+@router.message(Command("resetuser"))
+async def cmd_reset_user(message: Message) -> None:
+    """Usage: /resetuser <user_id>  — resets free_uses_remaining to 5."""
+    if not message.from_user or message.from_user.id != settings.admin_telegram_id:
+        return
+    parts = message.text.split() if message.text else []
+    if len(parts) < 2:
+        await message.answer("Usage: /resetuser <user_id>")
+        return
+    try:
+        target_id = int(parts[1])
+    except ValueError:
+        await message.answer("Invalid user ID.")
+        return
+    from app.db.database import async_session
+    from app.db.models import User
+    from sqlalchemy import select
+    async with async_session() as session:
+        stmt = select(User).where(User.telegram_user_id == target_id)
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+        if user is None:
+            await message.answer(f"User {target_id} not found.")
+            return
+        user.free_uses_remaining = 5
+        await session.commit()
+    await message.answer(f"✅ Reset free uses to 5 for user {target_id}.")
+    logger.info("Admin reset free uses for user %s", target_id)
+
+
 # ── Admin: /users command ──────────────────────────────────────────────────────
 
 @router.message(Command("users"))
