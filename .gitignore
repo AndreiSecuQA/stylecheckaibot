@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+venv2/
+.venv/
+env/
+
+# Environment / secrets
+.env
+*.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+app/db/*.db
+
+# Images (user uploads — not committed)
+app/storage/images/
+
+# Logs
+logs/
+*.log
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Docker
+*.tar

@@ -1,0 +1,18 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "python -m app.main"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 5
+numReplicas = 1
+
+# Environment variables to set in the Railway dashboard:
+#   TELEGRAM_BOT_TOKEN  — your Telegram bot token
+#   GEMINI_API_KEY      — your Google Gemini API key
+#   DB_PATH             — path inside the mounted volume, e.g. /data/db/stylecheck.db
+#   IMAGES_DIR          — path inside the mounted volume, e.g. /data/images
+#
+# Persistent volumes (configure in Railway UI):
+#   Mount /data  →  so DB and images survive redeploys
