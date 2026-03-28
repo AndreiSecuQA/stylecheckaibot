@@ -5,7 +5,7 @@ from aiogram import Bot, F, Router
 from aiogram.enums import ChatAction
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import BufferedInputFile, Message
+from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
 from app.bot.keyboards import main_menu_keyboard
 from app.db.database import get_all_users_summary, get_user_body_params, get_user_language
