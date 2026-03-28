@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import Bot, F, Router
 from aiogram.enums import ChatAction
 from aiogram.fsm.context import FSMContext
@@ -22,6 +24,7 @@ from app.storage.image_storage import save_image
 from app.utils.config import settings
 from app.utils.i18n import t
 from app.utils.logger import logger
+from app.utils.photo_cleanup import schedule_photo_deletion
 
 router = Router()
 
@@ -78,6 +81,7 @@ async def on_buy_photo(message: Message, state: FSMContext, bot: Bot) -> None:
 
         image_bytes = file_bytes.read()
         image_path = await save_image(user_id, image_bytes)
+        asyncio.create_task(schedule_photo_deletion(bot, user_id, image_path, lang))
 
         result = await analyze_buy_item_initial(image_path, lang, api_key=api_key)
 

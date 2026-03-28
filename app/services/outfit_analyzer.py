@@ -54,6 +54,7 @@ _OUTFIT_PROMPT: dict = {
         "🎨 Style Score: X/10\n"
         "✅ Colors: <one short sentence>\n"
         "👔 Fit: <one short sentence>\n"
+        "📐 Proportions: <one silhouette tip — e.g. high-waist to elongate legs, oversized top to balance hips>\n"
         "📍 Occasion: <best occasion in 3 words>\n"
         "💡 Quick tip: <one specific actionable tip>\n\n"
         "Be direct and confident. No greetings, no markdown, plain text only."
@@ -65,6 +66,7 @@ _OUTFIT_PROMPT: dict = {
         "🎨 Scor stil: X/10\n"
         "✅ Culori: <o propozitie scurta>\n"
         "👔 Croiala: <o propozitie scurta>\n"
+        "📐 Proportii: <un sfat de silueta — ex: talie inalta pentru picioare lungi, bluza oversize pentru echilibru>\n"
         "📍 Ocazie: <cea mai buna ocazie in 3 cuvinte>\n"
         "💡 Sfat rapid: <un sfat concret de imbunatatire>\n\n"
         "Fii direct si sigur. Fara salutari, fara markdown, doar text simplu."
@@ -125,6 +127,35 @@ _OCCASION_IDEAS_PROMPT: dict = {
         "2️⃣ ... (repeta)\n\n"
         "3️⃣ ... (repeta)\n\n"
         "Fii practic si specific. Doar text simplu, fara markdown."
+    ),
+}
+
+_FABRIC_PROMPT: dict = {
+    "en": (
+        "You are a professional fashion stylist and fabric expert.\n"
+        "Look at this clothing item and analyze the visible fabric and texture.\n"
+        "Use this EXACT format:\n\n"
+        "🧵 Fabric Analysis:\n\n"
+        "🔍 Material: <what fabric this appears to be — e.g. cotton, polyester, linen, wool, silk>\n"
+        "✅ Quality: <premium / good / average / low — plus one short reason>\n"
+        "🌡 Season: <best season(s) to wear this fabric>\n"
+        "💡 Tip: <one care or styling tip based on this fabric>\n\n"
+        "Be honest. If the fabric looks cheap (e.g. synthetic shine, pill texture), say so. "
+        "Plain text only, no markdown."
+        "{sentinel}"
+    ),
+    "ro": (
+        "Esti un stilist profesionist si expert in materiale textile.\n"
+        "Uita-te la acest articol vestimentar si analizeaza materialul si textura vizibila.\n"
+        "Foloseste EXACT acest format:\n\n"
+        "🧵 Analiza Material:\n\n"
+        "🔍 Material: <ce material pare sa fie — ex: bumbac, poliester, in, lana, matase>\n"
+        "✅ Calitate: <premium / buna / medie / slaba — plus un motiv scurt>\n"
+        "🌡 Sezon: <cel mai bun sezon pentru acest material>\n"
+        "💡 Sfat: <un sfat de ingrijire sau stilizare bazat pe material>\n\n"
+        "Fii sincer. Daca materialul arata ieftin (ex: stralucire sintetica, aspect pufos), spune-o. "
+        "Doar text simplu, fara markdown."
+        "{sentinel}"
     ),
 }
 
@@ -237,6 +268,18 @@ async def generate_tips_for_10(
     body_context = _build_body_context(name, height_cm, weight_kg, lang)
     prompt_template = _TIPS_FOR_10_PROMPT.get(lang, _TIPS_FOR_10_PROMPT["en"])
     prompt = prompt_template.format(body_context=body_context, sentinel=_SENTINEL_INSTRUCTION)
+    raw = await analyze_image(image_path, prompt, api_key=api_key)
+    _check_fashion_sentinel(raw)
+    return _truncate(_strip_markdown(raw))
+
+
+async def analyze_fabric(
+    image_path: str,
+    lang: str = "en",
+    api_key: Optional[str] = None,
+) -> str:
+    prompt_template = _FABRIC_PROMPT.get(lang, _FABRIC_PROMPT["en"])
+    prompt = prompt_template.format(sentinel=_SENTINEL_INSTRUCTION)
     raw = await analyze_image(image_path, prompt, api_key=api_key)
     _check_fashion_sentinel(raw)
     return _truncate(_strip_markdown(raw))

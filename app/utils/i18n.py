@@ -189,6 +189,18 @@ _STRINGS: Dict[str, Dict[str, str]] = {
         "en": "Creating your tips for a 10/10...",
         "ro": "Creez sfaturile pentru 10/10...",
     },
+    "btn_check_fabric": {
+        "en": "🧵 Check Fabric Quality",
+        "ro": "🧵 Verifică Calitatea Materialului",
+    },
+    "checking_fabric": {
+        "en": "🧵 Analyzing fabric quality...",
+        "ro": "🧵 Analizez calitatea materialului...",
+    },
+    "photo_deleted": {
+        "en": "🗑 Your photo has been automatically deleted from our servers to protect your privacy.",
+        "ro": "🗑 Poza ta a fost ștearsă automat de pe serverele noastre pentru a-ți proteja confidențialitatea.",
+    },
 
     # ── Occasion Outfits flow ─────────────────────────────────────────────────
     "occasion_select_prompt": {

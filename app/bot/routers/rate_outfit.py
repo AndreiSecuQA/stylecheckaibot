@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import Bot, F, Router
 from aiogram.enums import ChatAction
 from aiogram.fsm.context import FSMContext
@@ -17,6 +19,7 @@ from app.db.database import (
 from app.services.gemini_service import QuotaExceededError
 from app.services.outfit_analyzer import (
     NotFashionImageError,
+    analyze_fabric,
     analyze_outfit,
     generate_tips_for_10,
 )
@@ -24,6 +27,7 @@ from app.storage.image_storage import save_image
 from app.utils.config import settings
 from app.utils.i18n import t
 from app.utils.logger import logger
+from app.utils.photo_cleanup import schedule_photo_deletion
 
 router = Router()
 
@@ -82,6 +86,7 @@ async def on_rate_photo(message: Message, state: FSMContext, bot: Bot) -> None:
 
         image_bytes = file_bytes.read()
         image_path = await save_image(user_id, image_bytes)
+        asyncio.create_task(schedule_photo_deletion(bot, user_id, image_path, lang))
         params = await get_user_body_params(user_id)
 
         result = await analyze_outfit(
@@ -156,6 +161,41 @@ async def on_tips_for_10(callback: CallbackQuery, state: FSMContext, bot: Bot) -
         await status_msg.edit_text(t("quota_exceeded", lang))
     except Exception:
         logger.exception("Error generating tips for user %s", user_id)
+        await status_msg.edit_text(t("generic_error", lang))
+
+
+@router.callback_query(RateOutfit.viewing_results, F.data == "action:check_fabric")
+async def on_check_fabric(callback: CallbackQuery, state: FSMContext, bot: Bot) -> None:
+    if not callback.from_user or not callback.message:
+        return
+    user_id = callback.from_user.id
+    lang = await get_user_language(user_id)
+    data = await state.get_data()
+    image_path = data.get("last_image_path")
+    if not image_path:
+        await callback.answer()
+        await callback.message.answer(t("send_photo_first", lang))
+        return
+
+    has_access, api_key, _ = await get_user_access(user_id)
+    if not has_access:
+        await callback.answer()
+        await callback.message.answer(t("no_access", lang))
+        return
+
+    await callback.answer()
+    status_msg = await callback.message.answer(t("checking_fabric", lang))
+    await bot.send_chat_action(chat_id=callback.message.chat.id, action=ChatAction.TYPING)
+
+    try:
+        result = await analyze_fabric(image_path, lang, api_key=api_key)
+        await status_msg.edit_text(result, reply_markup=rate_outfit_keyboard(lang))
+    except NotFashionImageError:
+        await status_msg.edit_text(t("not_fashion_image", lang))
+    except QuotaExceededError:
+        await status_msg.edit_text(t("quota_exceeded", lang))
+    except Exception:
+        logger.exception("Error analyzing fabric for user %s", user_id)
         await status_msg.edit_text(t("generic_error", lang))
 
 

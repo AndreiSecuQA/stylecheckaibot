@@ -10,6 +10,7 @@ from app.bot.routers.occasion_suggestions import router as occasion_suggestions_
 from app.bot.routers.onboarding import router as onboarding_router
 from app.bot.routers.rate_outfit import router as rate_outfit_router
 from app.db.database import init_db
+from app.storage.image_storage import cleanup_old_images_on_startup
 from app.utils.config import settings
 from app.utils.logger import logger
 
@@ -18,6 +19,7 @@ async def main() -> None:
     logger.info("Starting StyleCheckAIBot...")
 
     await init_db()
+    await cleanup_old_images_on_startup()
 
     bot = Bot(token=settings.telegram_bot_token)
     dp = Dispatcher(storage=MemoryStorage())

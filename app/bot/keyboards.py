@@ -61,8 +61,9 @@ def occasion_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
 def rate_outfit_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text=t("btn_tips_for_10", lang), callback_data="action:tips_for_10")],
-            [InlineKeyboardButton(text=t("btn_back_to_menu", lang), callback_data="action:back_to_menu")],
+            [InlineKeyboardButton(text=t("btn_tips_for_10", lang),   callback_data="action:tips_for_10")],
+            [InlineKeyboardButton(text=t("btn_check_fabric", lang),   callback_data="action:check_fabric")],
+            [InlineKeyboardButton(text=t("btn_back_to_menu", lang),   callback_data="action:back_to_menu")],
         ]
     )
 

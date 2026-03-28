@@ -19,6 +19,7 @@ _VALID_OUTFIT_RESPONSE = (
     "🎨 Style Score: 8/10\n"
     "✅ Colors: Great complementary palette\n"
     "👔 Fit: Well tailored for your build\n"
+    "📐 Proportions: High-waist pants would elongate your legs\n"
     "📍 Occasion: Perfect for casual outings\n"
     "💡 Quick tip: Add a belt to define the waist"
 )
@@ -180,6 +181,37 @@ class TestBuildBodyContext:
         ctx = _build_body_context("Ion", 170, 70, "ro")
         assert "Ion" in ctx
         assert "170cm" in ctx
+
+
+class TestAnalyzeFabric:
+    async def test_returns_fabric_analysis(self):
+        fabric_response = (
+            "🧵 Fabric Analysis:\n\n"
+            "🔍 Material: Cotton blend\n"
+            "✅ Quality: Good — natural feel with minimal sheen\n"
+            "🌡 Season: Spring and Autumn\n"
+            "💡 Tip: Machine wash cold to preserve shape"
+        )
+        with _mock_analyze_image(fabric_response):
+            from app.services.outfit_analyzer import analyze_fabric
+            result = await analyze_fabric("/img.jpg", "en")
+        assert "Material" in result or "Cotton" in result
+
+    async def test_raises_on_sentinel(self):
+        with _mock_analyze_image("NOT_FASHION"):
+            from app.services.outfit_analyzer import NotFashionImageError, analyze_fabric
+            with pytest.raises(NotFashionImageError):
+                await analyze_fabric("/img.jpg", "en")
+
+    async def test_romanian_prompt_used(self):
+        captured = {}
+        async def capture(path, prompt, **kwargs):
+            captured["prompt"] = prompt
+            return "🧵 Analiza Material:\n\n🔍 Material: Bumbac\n✅ Calitate: Buna\n🌡 Sezon: Vara\n💡 Sfat: ok"
+        with patch("app.services.outfit_analyzer.analyze_image", new=capture):
+            from app.services.outfit_analyzer import analyze_fabric
+            await analyze_fabric("/img.jpg", "ro")
+        assert "material" in captured["prompt"].lower() or "textil" in captured["prompt"].lower()
 
 
 class TestStripMarkdown:

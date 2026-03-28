@@ -55,6 +55,28 @@ async def delete_image(image_path: str) -> None:
         logger.error("Failed to delete image %s: %s", image_path, e)
 
 
+async def cleanup_old_images_on_startup(max_age_seconds: int = 900) -> None:
+    """Delete leftover images from a previous run that are older than max_age_seconds.
+
+    Called once at bot startup so stale photos from a crash/restart are removed
+    and users are not left with undeleted images on disk.
+    """
+    images_dir = settings.images_dir
+    if not images_dir.exists():
+        return
+    now = time.time()
+    count = 0
+    for img_file in images_dir.rglob("*.jpg"):
+        try:
+            if now - img_file.stat().st_mtime > max_age_seconds:
+                img_file.unlink()
+                count += 1
+        except OSError as e:
+            logger.warning("Startup cleanup: could not delete %s: %s", img_file, e)
+    if count:
+        logger.info("Startup cleanup: removed %d stale image(s).", count)
+
+
 async def get_latest_image_path(user_id: int) -> Optional[str]:
     """Return the path of the most recently saved image for a user, or None."""
     try:

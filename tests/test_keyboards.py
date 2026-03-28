@@ -98,18 +98,24 @@ class TestRateOutfitKeyboard:
         kb = rate_outfit_keyboard("en")
         assert isinstance(kb, InlineKeyboardMarkup)
 
-    def test_has_two_buttons(self):
-        # Simplified: Tips for 10/10 + Back to Menu
+    def test_has_three_buttons(self):
+        # Tips for 10/10 + Check Fabric + Back to Menu
         from app.bot.keyboards import rate_outfit_keyboard
         kb = rate_outfit_keyboard("en")
         buttons = [btn for row in kb.inline_keyboard for btn in row]
-        assert len(buttons) == 2
+        assert len(buttons) == 3
 
     def test_has_tips_for_10_callback(self):
         from app.bot.keyboards import rate_outfit_keyboard
         kb = rate_outfit_keyboard("en")
         callbacks = [btn.callback_data for row in kb.inline_keyboard for btn in row]
         assert "action:tips_for_10" in callbacks
+
+    def test_has_check_fabric_callback(self):
+        from app.bot.keyboards import rate_outfit_keyboard
+        kb = rate_outfit_keyboard("en")
+        callbacks = [btn.callback_data for row in kb.inline_keyboard for btn in row]
+        assert "action:check_fabric" in callbacks
 
     def test_has_back_to_menu_callback(self):
         from app.bot.keyboards import rate_outfit_keyboard
