@@ -8,7 +8,6 @@ from aiogram.types import CallbackQuery, Message
 from app.bot.keyboards import buy_feedback_keyboard, buy_rating_keyboard
 from app.bot.states import BuySupport
 from app.db.database import (
-    decrement_free_uses,
     get_user_access,
     get_user_body_params,
     get_user_language,
@@ -55,7 +54,7 @@ async def on_buy_photo(message: Message, state: FSMContext, bot: Bot) -> None:
     lang = data.get("lang", "en")
 
     # Check access
-    has_access, api_key, free_remaining = await get_user_access(user_id)
+    has_access, api_key, _ = await get_user_access(user_id)
     if not has_access:
         await message.answer(t("no_access", lang))
         return
@@ -84,13 +83,6 @@ async def on_buy_photo(message: Message, state: FSMContext, bot: Bot) -> None:
         asyncio.create_task(schedule_photo_deletion(bot, user_id, image_path, lang))
 
         result = await analyze_buy_item_initial(image_path, lang, api_key=api_key)
-
-        # Decrement free uses if applicable
-        if free_remaining > 0:
-            remaining = await decrement_free_uses(user_id)
-            if remaining > 0:
-                analyses_word = "analysis" if remaining == 1 else "analyses"
-                result += f"\n\n{t('free_uses_remaining', lang, count=str(remaining), analyses=analyses_word)}"
 
         await state.update_data(image_path=image_path, api_key=api_key)
         await state.set_state(BuySupport.viewing_initial_feedback)

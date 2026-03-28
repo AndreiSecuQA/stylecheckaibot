@@ -242,25 +242,13 @@ async def get_last_flow_image(telegram_user_id: int) -> Optional[str]:
 async def get_user_access(telegram_user_id: int) -> Tuple[bool, Optional[str], int]:
     """
     Returns (has_access, gemini_api_key_or_None, free_uses_remaining).
-    Logic:
-      - own key  → unlimited access, use their key
-      - approved → unlimited access, use system key (key=None)
-      - free uses remaining > 0 → limited access, use system key
-      - else → no access
+    All registered users use the system key — access is controlled by daily limit only.
     """
     async with async_session() as session:
-        stmt = select(User).where(User.telegram_user_id == telegram_user_id)
+        stmt = select(User.id).where(User.telegram_user_id == telegram_user_id)
         result = await session.execute(stmt)
-        user = result.scalar_one_or_none()
-        if user is None:
-            return False, None, 0
-        if user.gemini_api_key:
-            return True, user.gemini_api_key, -1  # -1 = unlimited via own key
-        if user.is_approved:
-            return True, None, -1  # -1 = unlimited via admin approval
-        if user.free_uses_remaining > 0:
-            return True, None, user.free_uses_remaining
-        return False, None, 0
+        exists = result.scalar_one_or_none() is not None
+        return (exists, None, 0)
 
 
 async def decrement_free_uses(telegram_user_id: int) -> int:

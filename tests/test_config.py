@@ -31,7 +31,7 @@ class TestSettings:
 
     def test_default_max_checks_per_day(self):
         from app.utils.config import settings
-        assert settings.max_checks_per_day == 50
+        assert settings.max_checks_per_day == 15
 
     def test_db_path_overridable_via_env(self):
         """DB_PATH env var should override the default db_path."""

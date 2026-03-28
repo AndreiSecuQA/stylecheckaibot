@@ -9,7 +9,6 @@ from app.bot.keyboards import rate_outfit_keyboard
 from app.bot.states import RateOutfit
 from app.db.database import (
     check_daily_limit,
-    decrement_free_uses,
     get_user_access,
     get_user_body_params,
     get_user_language,
@@ -56,7 +55,7 @@ async def on_rate_photo(message: Message, state: FSMContext, bot: Bot) -> None:
     lang = await get_user_language(user_id)
 
     # Check access
-    has_access, api_key, free_remaining = await get_user_access(user_id)
+    has_access, api_key, _ = await get_user_access(user_id)
     if not has_access:
         await message.answer(t("no_access", lang))
         return
@@ -98,13 +97,6 @@ async def on_rate_photo(message: Message, state: FSMContext, bot: Bot) -> None:
             weight_kg=params.get("weight_kg"),
             api_key=api_key,
         )
-
-        # Decrement free uses if applicable
-        if free_remaining > 0:
-            remaining = await decrement_free_uses(user_id)
-            if remaining > 0:
-                analyses_word = "analysis" if remaining == 1 else "analyses"
-                result += f"\n\n{t('free_uses_remaining', lang, count=str(remaining), analyses=analyses_word)}"
 
         await save_outfit_check(user_id, image_path, result)
         await state.update_data(last_image_path=image_path)

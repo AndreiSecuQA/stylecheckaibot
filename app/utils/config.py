@@ -34,7 +34,7 @@ class Settings:
 
     # Limits
     max_image_size_bytes: int = 10 * 1024 * 1024  # 10 MB
-    max_checks_per_day: int = 50
+    max_checks_per_day: int = 15
     max_stored_checks: int = 3
 
     # Gemini

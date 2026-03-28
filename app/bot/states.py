@@ -5,7 +5,6 @@ class Onboarding(StatesGroup):
     waiting_for_name = State()
     waiting_for_height = State()
     waiting_for_weight = State()
-    waiting_for_access = State()     # Gemini key OR request admin approval
 
 
 class RateOutfit(StatesGroup):

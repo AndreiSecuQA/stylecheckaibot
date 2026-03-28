@@ -296,8 +296,8 @@ _STRINGS: Dict[str, Dict[str, str]] = {
         "ro": "📸 Te rog trimite o poză, nu un fișier.",
     },
     "daily_limit": {
-        "en": "🚫 Daily limit reached. Come back tomorrow!",
-        "ro": "🚫 Limita zilnică atinsă. Revino mâine!",
+        "en": "🚫 You've reached your 15 analyses/day limit. Come back tomorrow!",
+        "ro": "🚫 Ai atins limita de 15 analize pe zi. Revino mâine!",
     },
     "send_photo_first": {
         "en": "📸 Please send a photo first.",
