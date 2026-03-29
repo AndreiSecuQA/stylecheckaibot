@@ -14,11 +14,11 @@ genai.configure(api_key=settings.gemini_api_key)
 
 # Fallback model order — try each until one works (deduped so primary isn't retried)
 _MODEL_FALLBACK_ORDER = list(dict.fromkeys([
-    settings.gemini_model,           # primary (from config)
-    "gemini-2.0-flash-lite",
+    settings.gemini_model,           # primary (from config) — gemini-2.5-flash
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-preview-04-17",
     "gemini-2.0-flash",
-    "gemini-flash-lite-latest",
-    "gemini-flash-latest",
+    "gemini-1.5-flash",
 ]))
 
 # Per-model singleton cache (system key only)
@@ -97,7 +97,7 @@ def _validate_key_sync(api_key: str) -> bool:
     """Test that a user-provided API key is valid by making a minimal text call."""
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash-lite")
+        model = genai.GenerativeModel("gemini-2.5-flash")
         model.generate_content("Say OK")
         return True
     except Exception as e:

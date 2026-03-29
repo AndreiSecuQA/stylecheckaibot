@@ -38,7 +38,7 @@ class Settings:
     max_stored_checks: int = 3
 
     # Gemini
-    gemini_model: str = "gemini-2.0-flash-lite"
+    gemini_model: str = "gemini-2.5-flash"
 
     # Admin — Telegram user ID of the bot administrator
     # Set ADMIN_TELEGRAM_ID in your .env file or Railway environment variables

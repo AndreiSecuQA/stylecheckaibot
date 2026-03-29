@@ -23,7 +23,7 @@ class TestSettings:
 
     def test_default_gemini_model(self):
         from app.utils.config import settings
-        assert settings.gemini_model == "gemini-2.0-flash-lite"
+        assert settings.gemini_model == "gemini-2.5-flash"
 
     def test_default_max_image_size(self):
         from app.utils.config import settings
