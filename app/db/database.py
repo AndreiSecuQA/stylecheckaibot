@@ -36,6 +36,7 @@ async def init_db() -> None:
             "UPDATE users SET free_uses_remaining = 5 WHERE free_uses_remaining = 0 AND gemini_api_key IS NULL AND is_approved = 0",
             "ALTER TABLE users ADD COLUMN style_criteria VARCHAR DEFAULT NULL",
             "ALTER TABLE users ADD COLUMN feedback_style VARCHAR DEFAULT 'friendly' NOT NULL",
+            "ALTER TABLE users ADD COLUMN feedback_sections VARCHAR DEFAULT NULL",
         ]
         for sql in migrations:
             try:
@@ -212,7 +213,7 @@ async def get_user_body_params(telegram_user_id: int) -> Dict:
         user = result.scalar_one_or_none()
         if user is None:
             return {"name": None, "height_cm": None, "weight_kg": None, "language": "en",
-                    "style_criteria": None, "feedback_style": "friendly"}
+                    "style_criteria": None, "feedback_style": "friendly", "feedback_sections": None}
         return {
             "name": user.name,
             "height_cm": user.height_cm,
@@ -220,6 +221,7 @@ async def get_user_body_params(telegram_user_id: int) -> Dict:
             "language": user.language,
             "style_criteria": user.style_criteria or "color_harmony,body_proportions,fit_silhouette,occasion_fit,fabric_texture,trends,accessories,layering,footwear,personal_style",
             "feedback_style": user.feedback_style or "friendly",
+            "feedback_sections": user.feedback_sections or "style_score,colors,fit,proportions,occasion,quick_tip",
         }
 
 

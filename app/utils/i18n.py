@@ -241,6 +241,22 @@ _STRINGS: Dict[str, Dict[str, str]] = {
         "ro": "⚖️ Introdu noul greutate în kg:",
         "ru": "⚖️ Введи новый вес в кг:",
     },
+    "settings_edit_sections": {
+        "en": "📊 Feedback Sections",
+        "ro": "📊 Secțiuni Feedback",
+        "ru": "📊 Разделы обратной связи",
+    },
+    "ask_feedback_sections": {
+        "en": "📊 Choose which sections to include in your outfit analysis.\nAll selected by default — tap to deselect.",
+        "ro": "📊 Alege ce secțiuni să apară în analiza ținutei tale.\nToate selectate implicit — apasă pentru a deselecta.",
+        "ru": "📊 Выбери, какие разделы включить в анализ образа.\nВсе выбраны по умолчанию — нажми для отмены.",
+    },
+    "section_style_score":  {"en": "🎨 Style Score",   "ro": "🎨 Scor Stil",       "ru": "🎨 Оценка стиля"},
+    "section_colors":       {"en": "✅ Colors",         "ro": "✅ Culori",           "ru": "✅ Цвета"},
+    "section_fit":          {"en": "👔 Fit",            "ro": "👔 Croială",          "ru": "👔 Посадка"},
+    "section_proportions":  {"en": "📐 Proportions",   "ro": "📐 Proporții",        "ru": "📐 Пропорции"},
+    "section_occasion":     {"en": "📍 Occasion",      "ro": "📍 Ocazie",           "ru": "📍 Случай"},
+    "section_quick_tip":    {"en": "💡 Quick Tip",     "ro": "💡 Sfat Rapid",       "ru": "💡 Быстрый совет"},
 
     # ── Rate My Outfit flow ───────────────────────────────────────────────────
     "rate_send_photo": {

@@ -17,6 +17,8 @@ ALL_CRITERIA = [
 
 FEEDBACK_STYLES = ["short", "friendly", "diplomatic", "detailed"]
 
+ALL_FEEDBACK_SECTIONS = ["style_score", "colors", "fit", "proportions", "occasion", "quick_tip"]
+
 
 def _chunk(lst: List, n: int) -> List[List]:
     return [lst[i:i + n] for i in range(0, len(lst), n)]
@@ -79,6 +81,27 @@ def feedback_style_keyboard(lang: str = "en", current: str = "") -> InlineKeyboa
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
+def feedback_sections_keyboard(selected: List[str], lang: str = "en") -> InlineKeyboardMarkup:
+    """Multiselect keyboard for outfit feedback sections."""
+    rows = []
+    for i in range(0, len(ALL_FEEDBACK_SECTIONS), 2):
+        row = []
+        for key in ALL_FEEDBACK_SECTIONS[i:i+2]:
+            label = t(f"section_{key}", lang)
+            prefix = "✅ " if key in selected else "⬜ "
+            row.append(InlineKeyboardButton(
+                text=prefix + label,
+                callback_data=f"section:toggle:{key}",
+            ))
+        rows.append(row)
+    n = len(selected)
+    rows.append([InlineKeyboardButton(
+        text=t("btn_criteria_done", lang, n=str(n)),
+        callback_data="section:done",
+    )])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
 def settings_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -86,6 +109,7 @@ def settings_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text=t("settings_edit_body", lang),      callback_data="settings:body")],
             [InlineKeyboardButton(text=t("settings_edit_criteria", lang),  callback_data="settings:criteria")],
             [InlineKeyboardButton(text=t("settings_edit_feedback", lang),  callback_data="settings:feedback")],
+            [InlineKeyboardButton(text=t("settings_edit_sections", lang),  callback_data="settings:sections")],
             [InlineKeyboardButton(text=t("btn_back_to_menu", lang),        callback_data="action:back_to_menu")],
         ]
     )

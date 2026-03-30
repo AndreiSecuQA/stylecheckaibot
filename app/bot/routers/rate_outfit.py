@@ -98,6 +98,7 @@ async def on_rate_photo(message: Message, state: FSMContext, bot: Bot) -> None:
             api_key=api_key,
             style_criteria=params.get("style_criteria"),
             feedback_style=params.get("feedback_style", "friendly"),
+            feedback_sections=params.get("feedback_sections"),
         )
 
         await save_outfit_check(user_id, image_path, result)

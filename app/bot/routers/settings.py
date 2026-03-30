@@ -5,7 +5,9 @@ from aiogram.types import CallbackQuery, Message
 
 from app.bot.keyboards import (
     ALL_CRITERIA,
+    ALL_FEEDBACK_SECTIONS,
     criteria_keyboard,
+    feedback_sections_keyboard,
     feedback_style_keyboard,
     language_keyboard,
     main_menu_keyboard,
@@ -206,3 +208,53 @@ async def on_edit_feedback_selected(callback: CallbackQuery, state: FSMContext) 
     await callback.answer()
     await callback.message.answer(t("settings_saved", lang))
     await _show_settings(callback, user_id, lang)
+
+
+@router.callback_query(EditProfile.choosing_setting, F.data == "settings:sections")
+async def on_edit_sections(callback: CallbackQuery, state: FSMContext) -> None:
+    if not callback.from_user or not callback.message:
+        return
+    user_id = callback.from_user.id
+    lang = await get_user_language(user_id)
+    params = await get_user_body_params(user_id)
+    sections_str = params.get("feedback_sections", ",".join(ALL_FEEDBACK_SECTIONS))
+    selected = [s.strip() for s in sections_str.split(",") if s.strip()]
+    await state.set_state(EditProfile.editing_feedback_sections)
+    await state.update_data(lang=lang, selected_sections=selected)
+    await callback.answer()
+    await callback.message.answer(
+        t("ask_feedback_sections", lang),
+        reply_markup=feedback_sections_keyboard(selected, lang),
+    )
+
+
+@router.callback_query(EditProfile.editing_feedback_sections, F.data.startswith("section:"))
+async def on_edit_sections_toggle(callback: CallbackQuery, state: FSMContext) -> None:
+    if not callback.data or not callback.from_user or not callback.message:
+        return
+    data = await state.get_data()
+    lang = data.get("lang", "en")
+    selected: list = list(data.get("selected_sections", list(ALL_FEEDBACK_SECTIONS)))
+    parts = callback.data.split(":", 2)
+
+    if parts[1] == "toggle" and len(parts) == 3:
+        key = parts[2]
+        if key in selected:
+            if len(selected) > 1:  # keep at least 1
+                selected.remove(key)
+        else:
+            selected.append(key)
+        await state.update_data(selected_sections=selected)
+        await callback.message.edit_reply_markup(
+            reply_markup=feedback_sections_keyboard(selected, lang)
+        )
+        await callback.answer()
+
+    elif parts[1] == "done":
+        user_id = callback.from_user.id
+        sections_str = ",".join(selected)
+        await update_user_preferences(user_id, feedback_sections=sections_str)
+        await state.set_state(EditProfile.choosing_setting)
+        await callback.answer()
+        await callback.message.answer(t("settings_saved", lang))
+        await _show_settings(callback, user_id, lang)

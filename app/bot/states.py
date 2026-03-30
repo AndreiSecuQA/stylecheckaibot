@@ -16,6 +16,7 @@ class EditProfile(StatesGroup):
     editing_weight = State()
     editing_criteria = State()
     editing_feedback_style = State()
+    editing_feedback_sections = State()
 
 
 class RateOutfit(StatesGroup):
