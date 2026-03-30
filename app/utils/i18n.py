@@ -426,31 +426,34 @@ _STRINGS: Dict[str, Dict[str, str]] = {
     # ── Broadcast message ─────────────────────────────────────────────────────
     "broadcast_v2": {
         "en": (
-            "👗 StyleCheckAI just got smarter!\n\n"
-            "Here's what's new for you:\n\n"
+            "👗 StyleCheckAI just levelled up — and it's all about YOU.\n\n"
+            "The AI now truly adapts to your preferences. Here's what changed:\n\n"
+            "🎯 Style Criteria — tell the AI exactly what to focus on: color harmony, fit, trends, accessories, footwear and more\n"
+            "💬 Feedback Style — choose your tone: ⚡ Short, 😊 Friendly, 🤝 Diplomatic or 📋 Detailed\n"
+            "📋 Feedback Sections — pick which sections appear in every analysis (Score, Colors, Fit, Proportions, Occasion, Quick Tip)\n"
             "🌐 Russian language — now fully supported\n"
-            "🎯 Style Criteria — choose what the AI focuses on (color, fit, trends, fabric...)\n"
-            "💬 Feedback Style — pick how I talk to you: short, friendly, diplomatic or detailed\n"
-            "⚙️ My Profile — edit all your settings anytime\n\n"
-            "Tap ⚙️ My Profile in the menu to set your preferences 👇"
+            "⚙️ My Profile — update any of these settings anytime, no need to start over\n\n"
+            "👉 Tap ⚙️ My Profile in the menu to personalise your experience now!"
         ),
         "ro": (
-            "👗 StyleCheckAI tocmai a devenit mai inteligent!\n\n"
-            "Iată ce e nou pentru tine:\n\n"
+            "👗 StyleCheckAI tocmai a evoluat — și totul e despre TINE.\n\n"
+            "AI-ul se adaptează acum cu adevărat la preferințele tale. Iată ce s-a schimbat:\n\n"
+            "🎯 Criterii de stil — spune-i AI-ului exact pe ce să se concentreze: armonia culorilor, croială, tendințe, accesorii, încălțăminte și altele\n"
+            "💬 Stil feedback — alege tonul: ⚡ Scurt, 😊 Prietenos, 🤝 Diplomatic sau 📋 Detaliat\n"
+            "📋 Secțiuni feedback — alege ce secțiuni apar în fiecare analiză (Scor, Culori, Croială, Proporții, Ocazie, Sfat rapid)\n"
             "🌐 Limba rusă — acum complet suportată\n"
-            "🎯 Criterii de stil — alege pe ce se concentrează AI-ul (culori, croială, tendințe, material...)\n"
-            "💬 Stil feedback — alege cum îți vorbesc: scurt, prietenos, diplomatic sau detaliat\n"
-            "⚙️ Profilul Meu — editează oricând setările tale\n\n"
-            "Apasă ⚙️ Profilul Meu din meniu pentru a-ți seta preferințele 👇"
+            "⚙️ Profilul Meu — modifică oricând aceste setări, fără să reiei procesul de la capăt\n\n"
+            "👉 Apasă ⚙️ Profilul Meu din meniu pentru a-ți personaliza experiența acum!"
         ),
         "ru": (
-            "👗 StyleCheckAI стал умнее!\n\n"
-            "Вот что нового для тебя:\n\n"
+            "👗 StyleCheckAI вышел на новый уровень — и всё это ради ТЕБЯ.\n\n"
+            "AI теперь по-настоящему адаптируется к твоим предпочтениям. Вот что изменилось:\n\n"
+            "🎯 Критерии стиля — скажи AI, на что именно обращать внимание: гармония цветов, посадка, тренды, аксессуары, обувь и многое другое\n"
+            "💬 Стиль ответов — выбери тон: ⚡ Кратко, 😊 Дружелюбно, 🤝 Дипломатично или 📋 Подробно\n"
+            "📋 Разделы анализа — выбери, какие разделы появляются в каждом анализе (Оценка, Цвета, Посадка, Пропорции, Случай, Быстрый совет)\n"
             "🌐 Русский язык — теперь полностью поддерживается\n"
-            "🎯 Критерии стиля — выбери, на что обращает внимание AI (цвет, посадка, тренды, ткань...)\n"
-            "💬 Стиль ответов — выбери, как я с тобой общаюсь: коротко, дружелюбно, дипломатично или подробно\n"
-            "⚙️ Мой профиль — редактируй настройки в любое время\n\n"
-            "Нажми ⚙️ Мой профиль в меню, чтобы настроить предпочтения 👇"
+            "⚙️ Мой профиль — меняй любые настройки в любое время, не нужно начинать заново\n\n"
+            "👉 Нажми ⚙️ Мой профиль в меню, чтобы персонализировать опыт прямо сейчас!"
         ),
     },
 
