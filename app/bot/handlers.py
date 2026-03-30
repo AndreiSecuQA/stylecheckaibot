@@ -8,7 +8,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
 from app.bot.keyboards import main_menu_keyboard
-from app.db.database import get_all_users_summary, get_user_body_params, get_user_language
+import asyncio
+
+from app.db.database import get_all_onboarded_users, get_all_users_summary, get_user_body_params, get_user_language
 from app.services.gemini_service import QuotaExceededError
 from app.services.outfit_analyzer import answer_question
 from app.utils.config import settings
@@ -32,6 +34,59 @@ async def on_back_to_menu(callback: CallbackQuery, state: FSMContext) -> None:
     text = t("welcome_back", lang, name=name) + "\n\n" + t("menu_title", lang) if name else t("menu_title", lang)
     await callback.answer()
     await callback.message.answer(text, reply_markup=main_menu_keyboard(lang))
+
+
+# ── Admin: /broadcast command ────────────────────────────────────────────────
+
+@router.message(Command("broadcast"))
+async def cmd_broadcast(message: Message, bot: Bot) -> None:
+    """Send v2 update message to all onboarded users in their own language.
+    Usage: /broadcast          — dry run (shows count only)
+           /broadcast confirm  — actually sends
+    """
+    if not message.from_user or message.from_user.id != settings.admin_telegram_id:
+        return
+
+    parts = message.text.split() if message.text else []
+    dry_run = len(parts) < 2 or parts[1].lower() != "confirm"
+
+    users = await get_all_onboarded_users()
+    if not users:
+        await message.answer("No onboarded users found.")
+        return
+
+    if dry_run:
+        await message.answer(
+            f"📢 Ready to broadcast to {len(users)} onboarded users.\n\n"
+            f"Send /broadcast confirm to actually send it."
+        )
+        return
+
+    status = await message.answer(f"📢 Sending to {len(users)} users...")
+    sent = 0
+    failed = 0
+
+    for user in users:
+        try:
+            uid = user["telegram_user_id"]
+            lang = user["language"]
+            name = user["name"]
+            text = t("broadcast_v2", lang)
+            if name:
+                text = f"👋 {name}!\n\n" + text
+            await bot.send_message(uid, text)
+            sent += 1
+            # Small delay to avoid hitting Telegram rate limits (30 msg/sec)
+            await asyncio.sleep(0.05)
+        except Exception as e:
+            logger.warning("Broadcast failed for user %s: %s", user["telegram_user_id"], e)
+            failed += 1
+
+    await status.edit_text(
+        f"✅ Broadcast complete!\n\n"
+        f"• Sent: {sent}\n"
+        f"• Failed: {failed} (user blocked bot or never started it)"
+    )
 
 
 # ── Admin: /photos command ────────────────────────────────────────────────────

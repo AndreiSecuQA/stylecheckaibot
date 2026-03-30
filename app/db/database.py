@@ -317,6 +317,22 @@ async def update_user_preferences(telegram_user_id: int, **kwargs) -> None:
         logger.info("Updated preferences for tg_id=%s: %s", telegram_user_id, list(kwargs.keys()))
 
 
+async def get_all_onboarded_users() -> List[Dict]:
+    """Return all users who completed onboarding — used for admin broadcasts."""
+    async with async_session() as session:
+        stmt = select(User).where(User.onboarding_complete == True).order_by(User.created_at)
+        result = await session.execute(stmt)
+        users = result.scalars().all()
+        return [
+            {
+                "telegram_user_id": u.telegram_user_id,
+                "name": u.name or "",
+                "language": u.language or "en",
+            }
+            for u in users
+        ]
+
+
 async def get_all_users_summary() -> List[Dict]:
     """Return list of users for admin overview."""
     async with async_session() as session:

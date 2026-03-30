@@ -407,6 +407,37 @@ _STRINGS: Dict[str, Dict[str, str]] = {
         "ru": "Я не понял. Пожалуйста, используй кнопки меню.",
     },
 
+    # ── Broadcast message ─────────────────────────────────────────────────────
+    "broadcast_v2": {
+        "en": (
+            "👗 StyleCheckAI just got smarter!\n\n"
+            "Here's what's new for you:\n\n"
+            "🌐 Russian language — now fully supported\n"
+            "🎯 Style Criteria — choose what the AI focuses on (color, fit, trends, fabric...)\n"
+            "💬 Feedback Style — pick how I talk to you: short, friendly, diplomatic or detailed\n"
+            "⚙️ My Profile — edit all your settings anytime\n\n"
+            "Tap ⚙️ My Profile in the menu to set your preferences 👇"
+        ),
+        "ro": (
+            "👗 StyleCheckAI tocmai a devenit mai inteligent!\n\n"
+            "Iată ce e nou pentru tine:\n\n"
+            "🌐 Limba rusă — acum complet suportată\n"
+            "🎯 Criterii de stil — alege pe ce se concentrează AI-ul (culori, croială, tendințe, material...)\n"
+            "💬 Stil feedback — alege cum îți vorbesc: scurt, prietenos, diplomatic sau detaliat\n"
+            "⚙️ Profilul Meu — editează oricând setările tale\n\n"
+            "Apasă ⚙️ Profilul Meu din meniu pentru a-ți seta preferințele 👇"
+        ),
+        "ru": (
+            "👗 StyleCheckAI стал умнее!\n\n"
+            "Вот что нового для тебя:\n\n"
+            "🌐 Русский язык — теперь полностью поддерживается\n"
+            "🎯 Критерии стиля — выбери, на что обращает внимание AI (цвет, посадка, тренды, ткань...)\n"
+            "💬 Стиль ответов — выбери, как я с тобой общаюсь: коротко, дружелюбно, дипломатично или подробно\n"
+            "⚙️ Мой профиль — редактируй настройки в любое время\n\n"
+            "Нажми ⚙️ Мой профиль в меню, чтобы настроить предпочтения 👇"
+        ),
+    },
+
     # ── Legacy keys ───────────────────────────────────────────────────────────
     "btn_get_perfect":          {"en": "✨ Tips for 10/10",          "ro": "✨ Sfaturi pentru 10/10",     "ru": "✨ Советы для 10/10"},
     "btn_change_colors":        {"en": "✨ Tips for 10/10",          "ro": "✨ Sfaturi pentru 10/10",     "ru": "✨ Советы для 10/10"},
