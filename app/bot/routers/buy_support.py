@@ -27,7 +27,7 @@ from app.utils.photo_cleanup import schedule_photo_deletion
 
 router = Router()
 
-_BUY_BUTTONS = {"🛍 Buy Support", "🛍 Sfaturi Cumpărături", "🛍 Sfaturi Cumparaturi"}
+_BUY_BUTTONS = {"🛍 Buy Support", "🛍 Sfaturi Cumpărături", "🛍 Sfaturi Cumparaturi", "🛍 Советы по покупке"}
 
 
 @router.message(F.text.in_(_BUY_BUTTONS))
@@ -82,7 +82,12 @@ async def on_buy_photo(message: Message, state: FSMContext, bot: Bot) -> None:
         image_path = await save_image(user_id, image_bytes)
         asyncio.create_task(schedule_photo_deletion(bot, user_id, image_path, lang))
 
-        result = await analyze_buy_item_initial(image_path, lang, api_key=api_key)
+        params_body = await get_user_body_params(user_id)
+        result = await analyze_buy_item_initial(
+            image_path, lang, api_key=api_key,
+            style_criteria=params_body.get("style_criteria"),
+            feedback_style=params_body.get("feedback_style", "friendly"),
+        )
 
         await state.update_data(image_path=image_path, api_key=api_key)
         await state.set_state(BuySupport.viewing_initial_feedback)
@@ -132,6 +137,8 @@ async def on_brand_price_entered(message: Message, state: FSMContext, bot: Bot) 
             height_cm=params.get("height_cm"),
             weight_kg=params.get("weight_kg"),
             api_key=api_key,
+            style_criteria=params.get("style_criteria"),
+            feedback_style=params.get("feedback_style", "friendly"),
         )
         await state.set_state(BuySupport.viewing_rating)
         await status_msg.edit_text(result, reply_markup=buy_rating_keyboard(lang))

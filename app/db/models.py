@@ -32,6 +32,8 @@ class User(Base):
     gemini_api_key: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     is_approved: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0", nullable=False)
     free_uses_remaining: Mapped[int] = mapped_column(Integer, default=5, server_default="5", nullable=False)
+    style_criteria: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    feedback_style: Mapped[str] = mapped_column(String(20), default="friendly", server_default="friendly", nullable=False)
 
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

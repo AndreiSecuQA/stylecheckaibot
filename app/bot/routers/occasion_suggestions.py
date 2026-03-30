@@ -19,7 +19,7 @@ from app.utils.logger import logger
 
 router = Router()
 
-_OCCASION_BUTTONS = {"👔 Occasion Outfits", "👔 Ținute pentru Ocazii", "👔 Tinute pentru Ocazii"}
+_OCCASION_BUTTONS = {"👔 Occasion Outfits", "👔 Ținute pentru Ocazii", "👔 Tinute pentru Ocazii", "👔 Образы для случая"}
 
 
 @router.message(F.text.in_(_OCCASION_BUTTONS))
@@ -65,6 +65,8 @@ async def on_occasion_selected(callback: CallbackQuery, state: FSMContext) -> No
             height_cm=params.get("height_cm"),
             weight_kg=params.get("weight_kg"),
             api_key=api_key,
+            style_criteria=params.get("style_criteria"),
+            feedback_style=params.get("feedback_style", "friendly"),
         )
 
         # Decrement free uses if applicable

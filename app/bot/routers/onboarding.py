@@ -3,7 +3,13 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from app.bot.keyboards import language_keyboard, main_menu_keyboard
+from app.bot.keyboards import (
+    criteria_keyboard,
+    feedback_style_keyboard,
+    language_keyboard,
+    main_menu_keyboard,
+    ALL_CRITERIA,
+)
 from app.bot.states import Onboarding
 from app.db.database import (
     complete_onboarding,
@@ -16,6 +22,8 @@ from app.utils.i18n import t
 from app.utils.logger import logger
 
 router = Router()
+
+_DEFAULT_CRITERIA = ",".join(ALL_CRITERIA)
 
 
 def _parse_positive_int(text: str, min_val: int, max_val: int):
@@ -44,10 +52,7 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
         )
     else:
         await state.clear()
-        await message.answer(
-            t("choose_language", "en"),
-            reply_markup=language_keyboard(),
-        )
+        await message.answer(t("choose_language", "en"), reply_markup=language_keyboard())
         await state.set_state(Onboarding.waiting_for_name)
 
 
@@ -123,15 +128,66 @@ async def on_weight_entered(message: Message, state: FSMContext) -> None:
     if weight is None:
         await message.answer(t("weight_range_error", lang))
         return
+    await state.update_data(weight_kg=weight)
+    # Move to criteria selection — default all selected
+    selected = list(ALL_CRITERIA)
+    await state.update_data(selected_criteria=selected)
+    await state.set_state(Onboarding.waiting_for_criteria)
+    await message.answer(t("ask_criteria", lang), reply_markup=criteria_keyboard(selected, lang))
+
+
+@router.callback_query(Onboarding.waiting_for_criteria, F.data.startswith("criteria:"))
+async def on_criteria_toggle(callback: CallbackQuery, state: FSMContext) -> None:
+    if not callback.data or not callback.from_user or not callback.message:
+        return
+    data = await state.get_data()
+    lang = data.get("lang", "en")
+    selected: list = list(data.get("selected_criteria", list(ALL_CRITERIA)))
+    action = callback.data.split(":", 2)
+
+    if action[1] == "toggle" and len(action) == 3:
+        key = action[2]
+        if key in selected:
+            if len(selected) > 1:  # Must keep at least 1
+                selected.remove(key)
+        else:
+            selected.append(key)
+        await state.update_data(selected_criteria=selected)
+        await callback.message.edit_reply_markup(reply_markup=criteria_keyboard(selected, lang))
+        await callback.answer()
+
+    elif action[1] == "done":
+        await callback.answer()
+        await state.update_data(selected_criteria=selected)
+        await state.set_state(Onboarding.waiting_for_feedback_style)
+        await callback.message.answer(
+            t("ask_feedback_style", lang),
+            reply_markup=feedback_style_keyboard(lang, current="friendly"),
+        )
+
+
+@router.callback_query(Onboarding.waiting_for_feedback_style, F.data.startswith("feedback_style:"))
+async def on_feedback_style_selected(callback: CallbackQuery, state: FSMContext) -> None:
+    if not callback.data or not callback.from_user or not callback.message:
+        return
+    feedback_style = callback.data.split(":", 1)[1]
+    data = await state.get_data()
+    lang = data.get("lang", "en")
     name = data.get("name", "")
     height_cm = data.get("height_cm", 170)
-    user_id = message.from_user.id
-    await complete_onboarding(user_id, name, height_cm, weight)
+    weight_kg = data.get("weight_kg", 70)
+    selected_criteria = data.get("selected_criteria", list(ALL_CRITERIA))
+    criteria_str = ",".join(selected_criteria)
+
+    user_id = callback.from_user.id
+    await complete_onboarding(user_id, name, height_cm, weight_kg, criteria_str, feedback_style)
     await state.clear()
-    await message.answer(
+    await callback.answer()
+    await callback.message.answer(
         t("onboarding_complete", lang, name=name),
         reply_markup=main_menu_keyboard(lang),
     )
     logger.info(
-        "Onboarding complete for user %s: %s %dcm %dkg", user_id, name, height_cm, weight
+        "Onboarding complete for user %s: %s %dcm %dkg criteria=%s feedback=%s",
+        user_id, name, height_cm, weight_kg, criteria_str, feedback_style,
     )

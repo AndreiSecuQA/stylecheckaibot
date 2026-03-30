@@ -9,6 +9,7 @@ from app.bot.routers.buy_support import router as buy_support_router
 from app.bot.routers.occasion_suggestions import router as occasion_suggestions_router
 from app.bot.routers.onboarding import router as onboarding_router
 from app.bot.routers.rate_outfit import router as rate_outfit_router
+from app.bot.routers.settings import router as settings_router
 from app.db.database import init_db
 from app.storage.image_storage import cleanup_old_images_on_startup
 from app.utils.config import settings
@@ -26,6 +27,7 @@ async def main() -> None:
 
     # Order matters: specific routers first, catch-all last
     dp.include_router(onboarding_router)
+    dp.include_router(settings_router)
     dp.include_router(rate_outfit_router)
     dp.include_router(occasion_suggestions_router)
     dp.include_router(buy_support_router)

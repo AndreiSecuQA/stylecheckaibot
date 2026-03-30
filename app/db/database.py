@@ -34,6 +34,8 @@ async def init_db() -> None:
             "ALTER TABLE users ADD COLUMN free_uses_remaining INTEGER DEFAULT 5 NOT NULL",
             # Fix: existing users who got free_uses_remaining=0 from old schema get reset to 5
             "UPDATE users SET free_uses_remaining = 5 WHERE free_uses_remaining = 0 AND gemini_api_key IS NULL AND is_approved = 0",
+            "ALTER TABLE users ADD COLUMN style_criteria VARCHAR DEFAULT NULL",
+            "ALTER TABLE users ADD COLUMN feedback_style VARCHAR DEFAULT 'friendly' NOT NULL",
         ]
         for sql in migrations:
             try:
@@ -173,7 +175,8 @@ async def save_outfit_check(
 
 
 async def complete_onboarding(
-    telegram_user_id: int, name: str, height_cm: int, weight_kg: int
+    telegram_user_id: int, name: str, height_cm: int, weight_kg: int,
+    style_criteria: str = "", feedback_style: str = "friendly"
 ) -> None:
     async with async_session() as session:
         stmt = select(User).where(User.telegram_user_id == telegram_user_id)
@@ -185,6 +188,8 @@ async def complete_onboarding(
         user.name = name
         user.height_cm = height_cm
         user.weight_kg = weight_kg
+        user.style_criteria = style_criteria
+        user.feedback_style = feedback_style
         user.onboarding_complete = True
         await session.commit()
         logger.info("Onboarding complete for tg_id=%s", telegram_user_id)
@@ -206,12 +211,15 @@ async def get_user_body_params(telegram_user_id: int) -> Dict:
         result = await session.execute(stmt)
         user = result.scalar_one_or_none()
         if user is None:
-            return {"name": None, "height_cm": None, "weight_kg": None, "language": "en"}
+            return {"name": None, "height_cm": None, "weight_kg": None, "language": "en",
+                    "style_criteria": None, "feedback_style": "friendly"}
         return {
             "name": user.name,
             "height_cm": user.height_cm,
             "weight_kg": user.weight_kg,
             "language": user.language,
+            "style_criteria": user.style_criteria or "color_harmony,body_proportions,fit_silhouette,occasion_fit,fabric_texture,trends,accessories,layering,footwear,personal_style",
+            "feedback_style": user.feedback_style or "friendly",
         }
 
 
@@ -292,6 +300,21 @@ async def approve_user(telegram_user_id: int) -> bool:
         await session.commit()
         logger.info("User tg_id=%s approved by admin", telegram_user_id)
         return True
+
+
+async def update_user_preferences(telegram_user_id: int, **kwargs) -> None:
+    """Update one or more user preference fields. Supported kwargs: name, height_cm, weight_kg, language, style_criteria, feedback_style."""
+    async with async_session() as session:
+        stmt = select(User).where(User.telegram_user_id == telegram_user_id)
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+        if user is None:
+            return
+        for key, value in kwargs.items():
+            if hasattr(user, key):
+                setattr(user, key, value)
+        await session.commit()
+        logger.info("Updated preferences for tg_id=%s: %s", telegram_user_id, list(kwargs.keys()))
 
 
 async def get_all_users_summary() -> List[Dict]:

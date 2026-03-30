@@ -30,7 +30,7 @@ from app.utils.photo_cleanup import schedule_photo_deletion
 
 router = Router()
 
-_RATE_BUTTONS = {"📸 Rate My Outfit", "📸 Evaluează Ținuta", "📸 Evalueaza Tinuta"}
+_RATE_BUTTONS = {"📸 Rate My Outfit", "📸 Evaluează Ținuta", "📸 Evalueaza Tinuta", "📸 Оценить аутфит"}
 
 
 @router.message(F.text.in_(_RATE_BUTTONS))
@@ -96,6 +96,8 @@ async def on_rate_photo(message: Message, state: FSMContext, bot: Bot) -> None:
             height_cm=params.get("height_cm"),
             weight_kg=params.get("weight_kg"),
             api_key=api_key,
+            style_criteria=params.get("style_criteria"),
+            feedback_style=params.get("feedback_style", "friendly"),
         )
 
         await save_outfit_check(user_id, image_path, result)
@@ -145,6 +147,8 @@ async def on_tips_for_10(callback: CallbackQuery, state: FSMContext, bot: Bot) -
             height_cm=params.get("height_cm"),
             weight_kg=params.get("weight_kg"),
             api_key=api_key,
+            style_criteria=params.get("style_criteria"),
+            feedback_style=params.get("feedback_style", "friendly"),
         )
         await status_msg.edit_text(result, reply_markup=rate_outfit_keyboard(lang))
     except NotFashionImageError:

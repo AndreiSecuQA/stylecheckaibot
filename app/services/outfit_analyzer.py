@@ -31,12 +31,32 @@ def _build_body_context(name: Optional[str], height_cm: Optional[int], weight_kg
         return ""
     parts = []
     if name:
-        parts.append(f"Name: {name}" if lang == "en" else f"Nume: {name}")
+        if lang == "ru":
+            parts.append(f"Имя: {name}")
+        elif lang == "en":
+            parts.append(f"Name: {name}")
+        else:
+            parts.append(f"Nume: {name}")
     if height_cm:
-        parts.append(f"Height: {height_cm}cm" if lang == "en" else f"Inaltime: {height_cm}cm")
+        if lang == "ru":
+            parts.append(f"Рост: {height_cm}см")
+        elif lang == "en":
+            parts.append(f"Height: {height_cm}cm")
+        else:
+            parts.append(f"Inaltime: {height_cm}cm")
     if weight_kg:
-        parts.append(f"Weight: {weight_kg}kg" if lang == "en" else f"Greutate: {weight_kg}kg")
-    prefix = "User profile: " if lang == "en" else "Profilul utilizatorului: "
+        if lang == "ru":
+            parts.append(f"Вес: {weight_kg}кг")
+        elif lang == "en":
+            parts.append(f"Weight: {weight_kg}kg")
+        else:
+            parts.append(f"Greutate: {weight_kg}kg")
+    if lang == "ru":
+        prefix = "Профиль пользователя: "
+    elif lang == "en":
+        prefix = "User profile: "
+    else:
+        prefix = "Profilul utilizatorului: "
     return prefix + ", ".join(parts)
 
 
@@ -44,6 +64,51 @@ _SENTINEL_INSTRUCTION = (
     "\n\nIMPORTANT: If this image does NOT show clothing, fashion items, an outfit, "
     "or a person wearing clothes, respond ONLY with the exact token: NOT_FASHION"
 )
+
+# ── Criteria → prompt label maps ─────────────────────────────────────────────
+_CRITERIA_LABELS_LANG = {
+    "color_harmony":    {"en": "color harmony",          "ro": "armonie cromatică",        "ru": "цветовую гармонию"},
+    "body_proportions": {"en": "body proportions",       "ro": "proporțiile corpului",      "ru": "пропорции тела"},
+    "fit_silhouette":   {"en": "fit and silhouette",     "ro": "croială și siluetă",        "ru": "посадку и силуэт"},
+    "occasion_fit":     {"en": "occasion appropriateness","ro": "potrivirea cu ocazia",     "ru": "соответствие случаю"},
+    "fabric_texture":   {"en": "fabric and texture",     "ro": "material și textură",       "ru": "ткань и текстуру"},
+    "trends":           {"en": "current fashion trends", "ro": "tendințele actuale",        "ru": "актуальные тренды"},
+    "accessories":      {"en": "accessory coordination", "ro": "coordonarea accesoriilor",  "ru": "сочетание аксессуаров"},
+    "layering":         {"en": "layering technique",     "ro": "tehnica de stratificare",   "ru": "технику многослойности"},
+    "footwear":         {"en": "footwear coordination",  "ro": "coordonarea încălțămintei", "ru": "сочетание обуви"},
+    "personal_style":   {"en": "personal style",         "ro": "stilul personal",           "ru": "личный стиль"},
+}
+
+_FEEDBACK_INSTRUCTIONS = {
+    "short":      "Be extremely brief. Use short bullet points only. Maximum 5 lines total. No lengthy explanations.",
+    "friendly":   "Use a warm, encouraging, casual and friendly tone. Be supportive and positive.",
+    "diplomatic": "Be balanced and constructive. Highlight positives first, then give gentle, tactful suggestions.",
+    "detailed":   "Be thorough and comprehensive. Provide specific details and professional analysis.",
+}
+
+
+def _build_criteria_instruction(criteria_str: str, lang: str) -> str:
+    if not criteria_str:
+        return ""
+    items = [c.strip() for c in criteria_str.split(",") if c.strip()]
+    if not items:
+        return ""
+    labels = [
+        _CRITERIA_LABELS_LANG.get(c, {}).get(lang)
+        or _CRITERIA_LABELS_LANG.get(c, {}).get("en", c)
+        for c in items
+    ]
+    prefix = {
+        "en": "\nFocus especially on: ",
+        "ro": "\nConcentrează-te în special pe: ",
+        "ru": "\nУделяй особое внимание: ",
+    }.get(lang, "\nFocus especially on: ")
+    return prefix + ", ".join(labels) + "."
+
+
+def _build_feedback_instruction(style: str) -> str:
+    return "\n" + _FEEDBACK_INSTRUCTIONS.get(style, _FEEDBACK_INSTRUCTIONS["friendly"])
+
 
 # ── Prompts ───────────────────────────────────────────────────────────────────
 
@@ -72,6 +137,18 @@ _OUTFIT_PROMPT: dict = {
         "Fii direct si sigur. Fara salutari, fara markdown, doar text simplu."
         "{sentinel}"
     ),
+    "ru": (
+        "Ты профессиональный стилист. {body_context}\n"
+        "Проанализируй этот образ и ответь СТРОГО в этом формате. Каждая строка КОРОТКАЯ:\n\n"
+        "🎨 Оценка стиля: X/10\n"
+        "✅ Цвета: <одно короткое предложение>\n"
+        "👔 Посадка: <одно короткое предложение>\n"
+        "📐 Пропорции: <один совет по силуэту — например, высокая талия удлинит ноги>\n"
+        "📍 Случай: <лучший случай в 3 словах>\n"
+        "💡 Быстрый совет: <один конкретный совет>\n\n"
+        "Будь прямым и уверенным. Без приветствий, без markdown, только простой текст."
+        "{sentinel}"
+    ),
 }
 
 _TIPS_FOR_10_PROMPT: dict = {
@@ -95,6 +172,17 @@ _TIPS_FOR_10_PROMPT: dict = {
         "2️⃣ <sfat concret — culoare, material sau accesoriu>\n"
         "3️⃣ <sfat concret — croiala sau truc de styling>\n\n"
         "Fii specific (numeste culori, piese, branduri daca ajuta). Doar text simplu, fara markdown."
+        "{sentinel}"
+    ),
+    "ru": (
+        "Ты профессиональный стилист. {body_context}\n"
+        "Посмотри на этот образ и дай ровно 3 конкретных совета для 10/10.\n"
+        "Используй этот формат:\n\n"
+        "✨ Советы для 10/10:\n\n"
+        "1️⃣ <конкретный совет — что добавить, заменить или изменить>\n"
+        "2️⃣ <конкретный совет — цвет, ткань или аксессуар>\n"
+        "3️⃣ <конкретный совет — посадка или стилистический приём>\n\n"
+        "Будь конкретным (называй цвета, вещи, бренды). Только простой текст, без markdown."
         "{sentinel}"
     ),
 }
@@ -128,6 +216,20 @@ _OCCASION_IDEAS_PROMPT: dict = {
         "3️⃣ ... (repeta)\n\n"
         "Fii practic si specific. Doar text simplu, fara markdown."
     ),
+    "ru": (
+        "Ты профессиональный стилист. {body_context}\n"
+        "Предложи 3 идеи образов для: {occasion}\n"
+        "Основывай советы только на росте ({height_cm}см) и весе ({weight_kg}кг) пользователя.\n"
+        "Используй этот формат для каждого образа:\n\n"
+        "1️⃣ <Название образа>\n"
+        "• Верх: <конкретная вещь>\n"
+        "• Низ: <конкретная вещь>\n"
+        "• Обувь: <конкретная вещь>\n"
+        "• Доп: <один аксессуар>\n\n"
+        "2️⃣ ... (повторить)\n\n"
+        "3️⃣ ... (повторить)\n\n"
+        "Будь практичным и конкретным. Только простой текст, без markdown."
+    ),
 }
 
 _FABRIC_PROMPT: dict = {
@@ -157,6 +259,19 @@ _FABRIC_PROMPT: dict = {
         "Doar text simplu, fara markdown."
         "{sentinel}"
     ),
+    "ru": (
+        "Ты профессиональный стилист и эксперт по тканям.\n"
+        "Посмотри на эту одежду и проанализируй видимую ткань и текстуру.\n"
+        "Используй ТОЧНО этот формат:\n\n"
+        "🧵 Анализ ткани:\n\n"
+        "🔍 Материал: <что это за ткань — например, хлопок, полиэстер, лён, шерсть, шёлк>\n"
+        "✅ Качество: <премиум / хорошее / среднее / низкое — плюс одна короткая причина>\n"
+        "🌡 Сезон: <лучший сезон для этой ткани>\n"
+        "💡 Совет: <один совет по уходу или стилизации>\n\n"
+        "Будь честным. Если ткань выглядит дёшево — скажи об этом. "
+        "Только простой текст, без markdown."
+        "{sentinel}"
+    ),
 }
 
 _BUY_INITIAL_PROMPT: dict = {
@@ -180,6 +295,17 @@ _BUY_INITIAL_PROMPT: dict = {
         "🔍 Calitate: <calitatea aparenta din poza intr-o propozitie>\n"
         "📍 Merge pentru: <2-3 ocazii, separate prin virgula>\n\n"
         "Scurt si sincer. Doar text simplu, fara markdown."
+        "{sentinel}"
+    ),
+    "ru": (
+        "Ты профессиональный стилист и консультант по покупкам.\n"
+        "Посмотри на эту одежду и дай быстрое первое впечатление.\n"
+        "Используй ТОЧНО этот формат:\n\n"
+        "🛍 Первое впечатление:\n\n"
+        "✅ Стиль: <универсальный/трендовый/классический — одно слово + одна причина>\n"
+        "🔍 Качество: <очевидное качество по фото в одном предложении>\n"
+        "📍 Подходит для: <2-3 случая, через запятую>\n\n"
+        "Коротко и честно. Только простой текст, без markdown."
         "{sentinel}"
     ),
 }
@@ -209,6 +335,19 @@ _BUY_RATING_PROMPT: dict = {
         "❌ Contra: <un dezavantaj principal>\n"
         "🏷 Verdict: CUMPARA sau NU CUMPARA — <un motiv scurt>\n\n"
         "Fii sincer si direct. Doar text simplu, fara markdown."
+        "{sentinel}"
+    ),
+    "ru": (
+        "Ты профессиональный стилист и консультант по покупкам. {body_context}\n"
+        "Пользователь хочет купить эту вещь.\n"
+        "Бренд и цена: {price_brand}\n\n"
+        "Дай краткую рекомендацию. Используй ТОЧНО этот формат:\n\n"
+        "RATING: X\n\n"
+        "💶 Ценность: <одно предложение о соотношении цены и качества>\n"
+        "✅ Плюс: <один главный плюс>\n"
+        "❌ Минус: <один главный минус>\n"
+        "🏷 Вердикт: КУПИТЬ или ПРОПУСТИТЬ — <одна короткая причина>\n\n"
+        "Будь честным и прямым. Только простой текст, без markdown."
         "{sentinel}"
     ),
 }
@@ -245,13 +384,17 @@ async def analyze_outfit(
     height_cm: Optional[int] = None,
     weight_kg: Optional[int] = None,
     api_key: Optional[str] = None,
+    style_criteria: Optional[str] = None,
+    feedback_style: str = "friendly",
 ) -> str:
     body_context = _build_body_context(name, height_cm, weight_kg, lang)
     prompt_template = _OUTFIT_PROMPT.get(lang, _OUTFIT_PROMPT["en"])
+    criteria_instruction = _build_criteria_instruction(style_criteria or "", lang)
+    feedback_instruction = _build_feedback_instruction(feedback_style)
     prompt = prompt_template.format(
         body_context=body_context,
         sentinel=_SENTINEL_INSTRUCTION,
-    )
+    ) + criteria_instruction + feedback_instruction
     raw = await analyze_image(image_path, prompt, api_key=api_key)
     _check_fashion_sentinel(raw)
     return _truncate(_strip_markdown(raw))
@@ -264,10 +407,17 @@ async def generate_tips_for_10(
     height_cm: Optional[int] = None,
     weight_kg: Optional[int] = None,
     api_key: Optional[str] = None,
+    style_criteria: Optional[str] = None,
+    feedback_style: str = "friendly",
 ) -> str:
     body_context = _build_body_context(name, height_cm, weight_kg, lang)
     prompt_template = _TIPS_FOR_10_PROMPT.get(lang, _TIPS_FOR_10_PROMPT["en"])
-    prompt = prompt_template.format(body_context=body_context, sentinel=_SENTINEL_INSTRUCTION)
+    criteria_instruction = _build_criteria_instruction(style_criteria or "", lang)
+    feedback_instruction = _build_feedback_instruction(feedback_style)
+    prompt = prompt_template.format(
+        body_context=body_context,
+        sentinel=_SENTINEL_INSTRUCTION,
+    ) + criteria_instruction + feedback_instruction
     raw = await analyze_image(image_path, prompt, api_key=api_key)
     _check_fashion_sentinel(raw)
     return _truncate(_strip_markdown(raw))
@@ -277,9 +427,13 @@ async def analyze_fabric(
     image_path: str,
     lang: str = "en",
     api_key: Optional[str] = None,
+    style_criteria: Optional[str] = None,
+    feedback_style: str = "friendly",
 ) -> str:
     prompt_template = _FABRIC_PROMPT.get(lang, _FABRIC_PROMPT["en"])
-    prompt = prompt_template.format(sentinel=_SENTINEL_INSTRUCTION)
+    criteria_instruction = _build_criteria_instruction(style_criteria or "", lang)
+    feedback_instruction = _build_feedback_instruction(feedback_style)
+    prompt = prompt_template.format(sentinel=_SENTINEL_INSTRUCTION) + criteria_instruction + feedback_instruction
     raw = await analyze_image(image_path, prompt, api_key=api_key)
     _check_fashion_sentinel(raw)
     return _truncate(_strip_markdown(raw))
@@ -292,17 +446,21 @@ async def generate_occasion_suggestions(
     height_cm: Optional[int] = None,
     weight_kg: Optional[int] = None,
     api_key: Optional[str] = None,
+    style_criteria: Optional[str] = None,
+    feedback_style: str = "friendly",
 ) -> str:
     body_context = _build_body_context(name, height_cm, weight_kg, lang)
     height_val = str(height_cm) if height_cm else "?"
     weight_val = str(weight_kg) if weight_kg else "?"
     prompt_template = _OCCASION_IDEAS_PROMPT.get(lang, _OCCASION_IDEAS_PROMPT["en"])
+    criteria_instruction = _build_criteria_instruction(style_criteria or "", lang)
+    feedback_instruction = _build_feedback_instruction(feedback_style)
     prompt = prompt_template.format(
         body_context=body_context,
         occasion=occasion,
         height_cm=height_val,
         weight_kg=weight_val,
-    )
+    ) + criteria_instruction + feedback_instruction
     raw = await ask_text(prompt, api_key=api_key)
     return _truncate(_strip_markdown(raw))
 
@@ -311,9 +469,13 @@ async def analyze_buy_item_initial(
     image_path: str,
     lang: str = "en",
     api_key: Optional[str] = None,
+    style_criteria: Optional[str] = None,
+    feedback_style: str = "friendly",
 ) -> str:
     prompt_template = _BUY_INITIAL_PROMPT.get(lang, _BUY_INITIAL_PROMPT["en"])
-    prompt = prompt_template.format(sentinel=_SENTINEL_INSTRUCTION)
+    criteria_instruction = _build_criteria_instruction(style_criteria or "", lang)
+    feedback_instruction = _build_feedback_instruction(feedback_style)
+    prompt = prompt_template.format(sentinel=_SENTINEL_INSTRUCTION) + criteria_instruction + feedback_instruction
     raw = await analyze_image(image_path, prompt, api_key=api_key)
     _check_fashion_sentinel(raw)
     return _truncate(_strip_markdown(raw))
@@ -327,14 +489,18 @@ async def analyze_buy_item_rating(
     height_cm: Optional[int] = None,
     weight_kg: Optional[int] = None,
     api_key: Optional[str] = None,
+    style_criteria: Optional[str] = None,
+    feedback_style: str = "friendly",
 ) -> str:
     body_context = _build_body_context(name, height_cm, weight_kg, lang)
     prompt_template = _BUY_RATING_PROMPT.get(lang, _BUY_RATING_PROMPT["en"])
+    criteria_instruction = _build_criteria_instruction(style_criteria or "", lang)
+    feedback_instruction = _build_feedback_instruction(feedback_style)
     prompt = prompt_template.format(
         body_context=body_context,
         price_brand=price_brand,
         sentinel=_SENTINEL_INSTRUCTION,
-    )
+    ) + criteria_instruction + feedback_instruction
     raw = await analyze_image(image_path, prompt, api_key=api_key)
     _check_fashion_sentinel(raw)
     return _truncate(_parse_buy_rating(raw))
@@ -344,6 +510,7 @@ async def answer_question(user_text: str, lang: str = "en") -> str:
     prompts = {
         "en": f"You are a professional fashion stylist. Answer this fashion question briefly and confidently in 2-3 sentences. No markdown formatting, plain text only: {user_text}",
         "ro": f"Esti un stilist profesionist. Raspunde la aceasta intrebare de moda scurt si sigur in 2-3 propozitii, in romana. Fara formatare markdown, doar text simplu: {user_text}",
+        "ru": f"Ты профессиональный стилист. Ответь на этот вопрос о моде кратко и уверенно в 2-3 предложениях на русском. Без markdown, только простой текст: {user_text}",
     }
     prompt = prompts.get(lang, prompts["en"])
     raw = await ask_text(prompt)

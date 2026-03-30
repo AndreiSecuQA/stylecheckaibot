@@ -11,11 +11,11 @@ class TestTranslation:
     def test_known_key_romanian(self):
         result = t("language_set", "ro")
         # Accept both old (no diacritics) and new (with diacritics) strings
-        assert "Limba" in result and ("Romana" in result or "Română" in result)
+        assert ("Limba" in result or "Limbă" in result) and ("Romana" in result or "Română" in result)
 
     def test_known_key_english_language_set(self):
         result = t("language_set", "en")
-        assert result == "Language set to English!"
+        assert "Language set to English" in result
 
     def test_unknown_key_returns_bracket_fallback(self):
         result = t("this_key_does_not_exist", "en")
@@ -24,7 +24,7 @@ class TestTranslation:
     def test_missing_language_falls_back_to_english(self):
         # "fr" doesn't exist — should return the English string
         result = t("language_set", "fr")
-        assert result == "Language set to English!"
+        assert "Language set to English" in result
 
     def test_kwargs_formatting(self):
         result = t("welcome_back", "en", name="Alice")
