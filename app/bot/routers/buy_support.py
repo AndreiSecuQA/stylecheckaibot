@@ -5,9 +5,10 @@ from aiogram.enums import ChatAction
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from app.bot.keyboards import buy_feedback_keyboard, buy_rating_keyboard
+from app.bot.keyboards import buy_feedback_keyboard, buy_rating_keyboard, upgrade_keyboard
 from app.bot.states import BuySupport
 from app.db.database import (
+    check_weekly_limit,
     get_user_access,
     get_user_body_params,
     get_user_language,
@@ -53,12 +54,12 @@ async def on_buy_photo(message: Message, state: FSMContext, bot: Bot) -> None:
     data = await state.get_data()
     lang = data.get("lang", "en")
 
-    # Check access
-    has_access, api_key, _ = await get_user_access(user_id)
-    if not has_access:
-        await message.answer(t("no_access", lang))
+    # Check weekly limit
+    if not await check_weekly_limit(user_id):
+        await message.answer(t("weekly_limit_reached", lang), reply_markup=upgrade_keyboard(lang))
         return
 
+    _, api_key, _ = await get_user_access(user_id)
     status_msg = await message.answer(t("buy_analyzing_initial", lang))
     await bot.send_chat_action(chat_id=message.chat.id, action=ChatAction.UPLOAD_PHOTO)
 

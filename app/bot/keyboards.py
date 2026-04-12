@@ -182,6 +182,50 @@ def admin_approval_keyboard(user_id: int) -> InlineKeyboardMarkup:
     )
 
 
+# ── Subscription / Payment keyboards ─────────────────────────────────────────
+
+def upgrade_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
+    """Shown when a free user hits the weekly limit."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[[
+            InlineKeyboardButton(text=t("btn_want_unlimited", lang), callback_data="payment:choose_plan"),
+        ]]
+    )
+
+
+def plan_selection_keyboard(lang: str = "en") -> InlineKeyboardMarkup:
+    """Plan picker: 1 month or lifetime."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t("btn_plan_monthly",  lang), callback_data="payment:plan:monthly")],
+            [InlineKeyboardButton(text=t("btn_plan_lifetime", lang), callback_data="payment:plan:lifetime")],
+        ]
+    )
+
+
+def payment_confirm_keyboard(lang: str = "en", plan: str = "monthly") -> InlineKeyboardMarkup:
+    """Shown after payment instructions — confirm + back."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t("btn_request_payment_confirm", lang), callback_data=f"payment:confirm:{plan}")],
+            [InlineKeyboardButton(text=t("btn_back_to_plans", lang),           callback_data="payment:choose_plan")],
+        ]
+    )
+
+
+def admin_unlock_keyboard(user_id: int) -> InlineKeyboardMarkup:
+    """Sent to admin when user requests payment confirmation."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅ 1 lună",   callback_data=f"admin:unlock:monthly:{user_id}"),
+                InlineKeyboardButton(text="✅ Lifetime", callback_data=f"admin:unlock:lifetime:{user_id}"),
+            ],
+            [InlineKeyboardButton(text="❌ Refuză",  callback_data=f"admin:deny_payment:{user_id}")],
+        ]
+    )
+
+
 # Legacy aliases
 def rate_outfit_keyboard_legacy(lang: str = "en") -> InlineKeyboardMarkup:
     return rate_outfit_keyboard(lang)

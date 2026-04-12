@@ -457,6 +457,154 @@ _STRINGS: Dict[str, Dict[str, str]] = {
         ),
     },
 
+    # ── Subscription / Payment ────────────────────────────────────────────────
+    "weekly_limit_reached": {
+        "en": (
+            "🔒 You've used your 1 free image this week.\n\n"
+            "StyleCheckAI runs on AI tokens that cost real money. "
+            "If you'd like unlimited access, you can upgrade below."
+        ),
+        "ro": (
+            "🔒 Ai folosit imaginea gratuită a acestei săptămâni.\n\n"
+            "StyleCheckAI funcționează pe baza de tokenuri AI care costă bani reali. "
+            "Dacă dorești acces nelimitat, poți face upgrade mai jos."
+        ),
+        "ru": (
+            "🔒 Ты использовал свою бесплатную картинку на этой неделе.\n\n"
+            "StyleCheckAI работает на AI-токенах, которые стоят реальных денег. "
+            "Если хочешь неограниченный доступ, нажми кнопку ниже."
+        ),
+    },
+    "btn_want_unlimited": {
+        "en": "🚀 I want unlimited access",
+        "ro": "🚀 Vreau acces nelimitat",
+        "ru": "🚀 Хочу неограниченный доступ",
+    },
+    "payment_choose_plan": {
+        "en": "Choose your plan:",
+        "ro": "Alege planul tău:",
+        "ru": "Выбери план:",
+    },
+    "btn_plan_monthly": {
+        "en": "📅 1 month — 40 RON",
+        "ro": "📅 1 lună — 40 lei",
+        "ru": "📅 1 месяц — 40 RON",
+    },
+    "btn_plan_lifetime": {
+        "en": "♾️ Lifetime — 500 RON",
+        "ro": "♾️ Toată viața — 500 lei",
+        "ru": "♾️ Навсегда — 500 RON",
+    },
+    "payment_instructions_monthly": {
+        "en": (
+            "📅 1 month — 40 RON\n\n"
+            "To pay, choose one of the options below:\n\n"
+            "📱 MIA transfer — send 40 RON to:\n"
+            "   079888688 (Andrei Secu)\n"
+            "   Comment: Your full name\n\n"
+            "💳 PayPal — send to:\n"
+            "   people2andreisecu@gmail.com\n"
+            "   Note: Your full name + 1 month\n\n"
+            "Once sent, press the button below and the admin will confirm your payment."
+        ),
+        "ro": (
+            "📅 1 lună — 40 lei\n\n"
+            "Pentru a plăti, alege una dintre opțiunile de mai jos:\n\n"
+            "📱 Transfer MIA — trimite 40 lei la:\n"
+            "   079888688 (Andrei Secu)\n"
+            "   Comentariu: Numele și Prenumele tău\n\n"
+            "💳 PayPal — trimite la:\n"
+            "   people2andreisecu@gmail.com\n"
+            "   Notă: Numele și Prenumele + 1 lună\n\n"
+            "Odată trimis, apasă butonul de mai jos și adminul va confirma plata."
+        ),
+        "ru": (
+            "📅 1 месяц — 40 RON\n\n"
+            "Для оплаты выбери один из вариантов:\n\n"
+            "📱 MIA перевод — отправь 40 RON на:\n"
+            "   079888688 (Andrei Secu)\n"
+            "   Комментарий: Имя и Фамилия\n\n"
+            "💳 PayPal — отправь на:\n"
+            "   people2andreisecu@gmail.com\n"
+            "   Примечание: Имя и Фамилия + 1 месяц\n\n"
+            "После перевода нажми кнопку ниже — администратор подтвердит платёж."
+        ),
+    },
+    "payment_instructions_lifetime": {
+        "en": (
+            "♾️ Lifetime access — 500 RON\n\n"
+            "One-time payment, unlimited access forever.\n\n"
+            "To pay, choose one of the options below:\n\n"
+            "📱 MIA transfer — send 500 RON to:\n"
+            "   079888688 (Andrei Secu)\n"
+            "   Comment: Your full name\n\n"
+            "💳 PayPal — send to:\n"
+            "   people2andreisecu@gmail.com\n"
+            "   Note: Your full name + lifetime\n\n"
+            "Once sent, press the button below and the admin will confirm your payment."
+        ),
+        "ro": (
+            "♾️ Acces pe toată viața — 500 lei\n\n"
+            "O singură plată, acces nelimitat pentru totdeauna.\n\n"
+            "Pentru a plăti, alege una dintre opțiunile de mai jos:\n\n"
+            "📱 Transfer MIA — trimite 500 lei la:\n"
+            "   079888688 (Andrei Secu)\n"
+            "   Comentariu: Numele și Prenumele tău\n\n"
+            "💳 PayPal — trimite la:\n"
+            "   people2andreisecu@gmail.com\n"
+            "   Notă: Numele și Prenumele + lifetime\n\n"
+            "Odată trimis, apasă butonul de mai jos și adminul va confirma plata."
+        ),
+        "ru": (
+            "♾️ Пожизненный доступ — 500 RON\n\n"
+            "Одноразовый платёж, неограниченный доступ навсегда.\n\n"
+            "Для оплаты выбери один из вариантов:\n\n"
+            "📱 MIA перевод — отправь 500 RON на:\n"
+            "   079888688 (Andrei Secu)\n"
+            "   Комментарий: Имя и Фамилия\n\n"
+            "💳 PayPal — отправь на:\n"
+            "   people2andreisecu@gmail.com\n"
+            "   Примечание: Имя и Фамилия + lifetime\n\n"
+            "После перевода нажми кнопку ниже — администратор подтвердит платёж."
+        ),
+    },
+    "btn_request_payment_confirm": {
+        "en": "📨 I've paid — request confirmation",
+        "ro": "📨 Am plătit — solicit confirmare",
+        "ru": "📨 Я оплатил — запросить подтверждение",
+    },
+    "btn_back_to_plans": {
+        "en": "← Back to plans",
+        "ro": "← Înapoi la planuri",
+        "ru": "← Назад к планам",
+    },
+    "payment_confirm_sent": {
+        "en": "✅ Your request has been sent! The admin will confirm your payment shortly and you'll receive a notification here.",
+        "ro": "✅ Cererea ta a fost trimisă! Adminul va confirma plata în curând și vei primi o notificare aici.",
+        "ru": "✅ Запрос отправлен! Администратор подтвердит платёж и ты получишь уведомление здесь.",
+    },
+    "payment_confirmed_monthly": {
+        "en": "🎉 Payment confirmed! You now have unlimited access for 1 month. Enjoy StyleCheckAI!",
+        "ro": "🎉 Plată confirmată! Ai acum acces nelimitat pentru 1 lună. Bucură-te de StyleCheckAI!",
+        "ru": "🎉 Платёж подтверждён! Теперь у тебя неограниченный доступ на 1 месяц. Наслаждайся StyleCheckAI!",
+    },
+    "payment_confirmed_lifetime": {
+        "en": "🎉 Payment confirmed! You now have lifetime unlimited access. Thank you for your support!",
+        "ro": "🎉 Plată confirmată! Ai acum acces nelimitat pe toată viața. Mulțumesc pentru susținere!",
+        "ru": "🎉 Платёж подтверждён! Теперь у тебя пожизненный неограниченный доступ. Спасибо за поддержку!",
+    },
+    "payment_denied": {
+        "en": "❌ Your payment request was not confirmed. If you believe this is an error, please contact support.",
+        "ro": "❌ Cererea ta de plată nu a fost confirmată. Dacă crezi că e o eroare, contactează suportul.",
+        "ru": "❌ Запрос на платёж не был подтверждён. Если считаешь, что это ошибка, свяжись с поддержкой.",
+    },
+    # Admin payment notification
+    "admin_payment_request": {
+        "en": "💳 New payment request!\n\nUser: {name}\nID: {user_id}\nPlan: {plan}\nLanguage: {lang}",
+        "ro": "💳 Cerere nouă de plată!\n\nUser: {name}\nID: {user_id}\nPlan: {plan}\nLimbă: {lang}",
+        "ru": "💳 Новый запрос платежа!\n\nПользователь: {name}\nID: {user_id}\nПлан: {plan}\nЯзык: {lang}",
+    },
+
     # ── Legacy keys ───────────────────────────────────────────────────────────
     "btn_get_perfect":          {"en": "✨ Tips for 10/10",          "ro": "✨ Sfaturi pentru 10/10",     "ru": "✨ Советы для 10/10"},
     "btn_change_colors":        {"en": "✨ Tips for 10/10",          "ro": "✨ Sfaturi pentru 10/10",     "ru": "✨ Советы для 10/10"},

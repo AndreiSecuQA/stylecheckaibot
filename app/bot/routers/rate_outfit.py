@@ -5,10 +5,10 @@ from aiogram.enums import ChatAction
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from app.bot.keyboards import rate_outfit_keyboard
+from app.bot.keyboards import rate_outfit_keyboard, upgrade_keyboard
 from app.bot.states import RateOutfit
 from app.db.database import (
-    check_daily_limit,
+    check_weekly_limit,
     get_user_access,
     get_user_body_params,
     get_user_language,
@@ -60,8 +60,8 @@ async def on_rate_photo(message: Message, state: FSMContext, bot: Bot) -> None:
         await message.answer(t("no_access", lang))
         return
 
-    if not await check_daily_limit(user_id):
-        await message.answer(t("daily_limit", lang))
+    if not await check_weekly_limit(user_id):
+        await message.answer(t("weekly_limit_reached", lang), reply_markup=upgrade_keyboard(lang))
         return
 
     status_msg = await message.answer(t("rate_analyzing", lang))

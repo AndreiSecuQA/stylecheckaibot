@@ -37,6 +37,9 @@ async def init_db() -> None:
             "ALTER TABLE users ADD COLUMN style_criteria VARCHAR DEFAULT NULL",
             "ALTER TABLE users ADD COLUMN feedback_style VARCHAR DEFAULT 'friendly' NOT NULL",
             "ALTER TABLE users ADD COLUMN feedback_sections VARCHAR DEFAULT NULL",
+            # Subscription system
+            "ALTER TABLE users ADD COLUMN subscription_type VARCHAR DEFAULT 'none' NOT NULL",
+            "ALTER TABLE users ADD COLUMN subscription_expires DATE DEFAULT NULL",
         ]
         for sql in migrations:
             try:
@@ -333,6 +336,95 @@ async def get_all_onboarded_users() -> List[Dict]:
             }
             for u in users
         ]
+
+
+async def check_weekly_limit(telegram_user_id: int) -> bool:
+    """
+    Returns True if the user may proceed with an image analysis.
+    - Subscribers (monthly/lifetime): always True.
+    - Free users: 1 image per calendar week (ISO week). Resets each Monday.
+    """
+    today = datetime.date.today()
+    async with async_session() as session:
+        stmt = select(User).where(User.telegram_user_id == telegram_user_id)
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+        if user is None:
+            return True  # brand-new user; will be created on first save
+
+        # --- Subscribers bypass the weekly limit ---
+        if user.subscription_type == "lifetime":
+            return True
+        if user.subscription_type == "monthly" and user.subscription_expires:
+            if user.subscription_expires >= today:
+                return True
+            # Expired monthly — fall through to free limit
+
+        # --- Free weekly limit (1 per ISO week) ---
+        today_yw = (today.isocalendar()[0], today.isocalendar()[1])  # (year, week)
+
+        if user.last_check_date is None:
+            user.last_check_date = today
+            user.daily_check_count = 1
+            await session.commit()
+            return True
+
+        last_yw = (user.last_check_date.isocalendar()[0], user.last_check_date.isocalendar()[1])
+
+        if today_yw != last_yw:
+            # New week — reset counter
+            user.last_check_date = today
+            user.daily_check_count = 1
+            await session.commit()
+            return True
+
+        if user.daily_check_count >= 1:
+            return False  # Already used the one free image this week
+
+        user.daily_check_count += 1
+        user.last_check_date = today
+        await session.commit()
+        return True
+
+
+async def get_subscription_status(telegram_user_id: int) -> Dict:
+    """Returns subscription info for a user."""
+    today = datetime.date.today()
+    async with async_session() as session:
+        stmt = select(User).where(User.telegram_user_id == telegram_user_id)
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+        if user is None:
+            return {"type": "none", "expires": None, "active": False}
+        sub_type = user.subscription_type or "none"
+        expires = user.subscription_expires
+        active = (
+            sub_type == "lifetime"
+            or (sub_type == "monthly" and expires is not None and expires >= today)
+        )
+        return {"type": sub_type, "expires": expires, "active": active}
+
+
+async def set_subscription(
+    telegram_user_id: int,
+    sub_type: str,
+    expires: Optional[datetime.date] = None,
+) -> bool:
+    """Set user subscription. Returns True if user was found."""
+    async with async_session() as session:
+        stmt = select(User).where(User.telegram_user_id == telegram_user_id)
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+        if user is None:
+            return False
+        user.subscription_type = sub_type
+        user.subscription_expires = expires
+        await session.commit()
+        logger.info(
+            "Subscription set to '%s' (expires %s) for tg_id=%s",
+            sub_type, expires, telegram_user_id,
+        )
+        return True
 
 
 async def get_all_users_summary() -> List[Dict]:

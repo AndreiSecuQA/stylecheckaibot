@@ -33,6 +33,10 @@ class User(Base):
     is_approved: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0", nullable=False)
     free_uses_remaining: Mapped[int] = mapped_column(Integer, default=5, server_default="5", nullable=False)
     style_criteria: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+
+    # Subscription
+    subscription_type: Mapped[str] = mapped_column(String(20), default="none", server_default="none", nullable=False)
+    subscription_expires: Mapped[Optional[datetime.date]] = mapped_column(Date, nullable=True)
     feedback_style: Mapped[str] = mapped_column(String(20), default="friendly", server_default="friendly", nullable=False)
     feedback_sections: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
 

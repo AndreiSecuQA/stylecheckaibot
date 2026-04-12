@@ -1,3 +1,4 @@
+import datetime
 import os
 from pathlib import Path
 
@@ -7,10 +8,22 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
-from app.bot.keyboards import main_menu_keyboard
+from app.bot.keyboards import (
+    admin_unlock_keyboard,
+    main_menu_keyboard,
+    payment_confirm_keyboard,
+    plan_selection_keyboard,
+    upgrade_keyboard,
+)
 import asyncio
 
-from app.db.database import get_all_onboarded_users, get_all_users_summary, get_user_body_params, get_user_language
+from app.db.database import (
+    get_all_onboarded_users,
+    get_all_users_summary,
+    get_user_body_params,
+    get_user_language,
+    set_subscription,
+)
 from app.services.gemini_service import QuotaExceededError
 from app.services.outfit_analyzer import answer_question
 from app.utils.config import settings
@@ -34,6 +47,132 @@ async def on_back_to_menu(callback: CallbackQuery, state: FSMContext) -> None:
     text = t("welcome_back", lang, name=name) + "\n\n" + t("menu_title", lang) if name else t("menu_title", lang)
     await callback.answer()
     await callback.message.answer(text, reply_markup=main_menu_keyboard(lang))
+
+
+# ── Payment: choose plan ─────────────────────────────────────────────────────
+
+@router.callback_query(F.data == "payment:choose_plan")
+async def on_choose_plan(callback: CallbackQuery) -> None:
+    if not callback.from_user or not callback.message:
+        return
+    lang = await get_user_language(callback.from_user.id)
+    await callback.answer()
+    await callback.message.answer(t("payment_choose_plan", lang), reply_markup=plan_selection_keyboard(lang))
+
+
+@router.callback_query(F.data.startswith("payment:plan:"))
+async def on_plan_selected(callback: CallbackQuery) -> None:
+    if not callback.from_user or not callback.message:
+        return
+    plan = callback.data.split(":")[-1]  # "monthly" or "lifetime"
+    lang = await get_user_language(callback.from_user.id)
+    await callback.answer()
+    key = "payment_instructions_monthly" if plan == "monthly" else "payment_instructions_lifetime"
+    await callback.message.answer(t(key, lang), reply_markup=payment_confirm_keyboard(lang, plan))
+
+
+@router.callback_query(F.data.startswith("payment:confirm:"))
+async def on_payment_confirm(callback: CallbackQuery, bot: Bot) -> None:
+    if not callback.from_user or not callback.message:
+        return
+    plan = callback.data.split(":")[-1]  # "monthly" or "lifetime"
+    user_id = callback.from_user.id
+    params = await get_user_body_params(user_id)
+    lang = params.get("language", "en")
+    name = params.get("name") or f"ID {user_id}"
+
+    plan_label = "1 lună — 40 lei" if plan == "monthly" else "Toată viața — 500 lei"
+
+    # Notify admin
+    if settings.admin_telegram_id:
+        admin_text = t("admin_payment_request", "ro",
+                       name=name, user_id=str(user_id), plan=plan_label, lang=lang)
+        try:
+            await bot.send_message(
+                settings.admin_telegram_id,
+                admin_text,
+                reply_markup=admin_unlock_keyboard(user_id),
+            )
+        except Exception:
+            logger.exception("Failed to notify admin about payment request from user %s", user_id)
+
+    await callback.answer()
+    await callback.message.answer(t("payment_confirm_sent", lang))
+
+
+# ── Admin: unlock / deny payment ─────────────────────────────────────────────
+
+@router.callback_query(F.data.startswith("admin:unlock:"))
+async def on_admin_unlock(callback: CallbackQuery, bot: Bot) -> None:
+    if not callback.from_user or not callback.message:
+        return
+    if callback.from_user.id != settings.admin_telegram_id:
+        await callback.answer("Not authorized.", show_alert=True)
+        return
+
+    parts = callback.data.split(":")  # admin:unlock:monthly:USER_ID
+    if len(parts) < 4:
+        await callback.answer("Invalid callback data.")
+        return
+
+    sub_type = parts[2]   # "monthly" or "lifetime"
+    target_user_id = int(parts[3])
+
+    expires = None
+    if sub_type == "monthly":
+        expires = datetime.date.today() + datetime.timedelta(days=30)
+
+    success = await set_subscription(target_user_id, sub_type, expires)
+    if not success:
+        await callback.answer("User not found in DB.", show_alert=True)
+        return
+
+    # Notify the user
+    user_lang = await get_user_language(target_user_id)
+    notification_key = "payment_confirmed_monthly" if sub_type == "monthly" else "payment_confirmed_lifetime"
+    try:
+        await bot.send_message(target_user_id, t(notification_key, user_lang),
+                               reply_markup=main_menu_keyboard(user_lang))
+    except Exception:
+        logger.warning("Could not send unlock notification to user %s", target_user_id)
+
+    # Edit admin message to confirm action
+    label = "1 lună" if sub_type == "monthly" else "Lifetime"
+    exp_str = f" (expiră {expires})" if expires else ""
+    await callback.answer(f"✅ Deblocat {label}{exp_str}", show_alert=True)
+    try:
+        await callback.message.edit_text(
+            callback.message.text + f"\n\n✅ Admin action: Deblocat {label}{exp_str}",
+            reply_markup=None,
+        )
+    except Exception:
+        pass
+
+
+@router.callback_query(F.data.startswith("admin:deny_payment:"))
+async def on_admin_deny_payment(callback: CallbackQuery, bot: Bot) -> None:
+    if not callback.from_user or not callback.message:
+        return
+    if callback.from_user.id != settings.admin_telegram_id:
+        await callback.answer("Not authorized.", show_alert=True)
+        return
+
+    target_user_id = int(callback.data.split(":")[-1])
+    user_lang = await get_user_language(target_user_id)
+
+    try:
+        await bot.send_message(target_user_id, t("payment_denied", user_lang))
+    except Exception:
+        logger.warning("Could not send denial notification to user %s", target_user_id)
+
+    await callback.answer("❌ Refuzat", show_alert=True)
+    try:
+        await callback.message.edit_text(
+            callback.message.text + "\n\n❌ Admin action: Refuzat",
+            reply_markup=None,
+        )
+    except Exception:
+        pass
 
 
 # ── Admin: /broadcast command ────────────────────────────────────────────────

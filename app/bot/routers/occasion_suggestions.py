@@ -6,7 +6,6 @@ from aiogram.types import CallbackQuery, Message
 from app.bot.keyboards import occasion_back_keyboard, occasion_keyboard
 from app.bot.states import OccasionSuggestions
 from app.db.database import (
-    decrement_free_uses,
     get_user_access,
     get_user_body_params,
     get_user_language,
@@ -46,12 +45,7 @@ async def on_occasion_selected(callback: CallbackQuery, state: FSMContext) -> No
     data = await state.get_data()
     lang = data.get("lang", "en")
 
-    # Check access
-    has_access, api_key, free_remaining = await get_user_access(user_id)
-    if not has_access:
-        await callback.answer()
-        await callback.message.answer(t("no_access", lang))
-        return
+    _, api_key, _ = await get_user_access(user_id)
 
     await callback.answer()
     status_msg = await callback.message.answer(t("occasion_generating", lang))
@@ -68,13 +62,6 @@ async def on_occasion_selected(callback: CallbackQuery, state: FSMContext) -> No
             style_criteria=params.get("style_criteria"),
             feedback_style=params.get("feedback_style", "friendly"),
         )
-
-        # Decrement free uses if applicable
-        if free_remaining > 0:
-            remaining = await decrement_free_uses(user_id)
-            if remaining > 0:
-                analyses_word = "analysis" if remaining == 1 else "analyses"
-                result += f"\n\n{t('free_uses_remaining', lang, count=str(remaining), analyses=analyses_word)}"
 
         await state.set_state(OccasionSuggestions.viewing_suggestions)
         await status_msg.edit_text(result, reply_markup=occasion_back_keyboard(lang))
